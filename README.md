@@ -1,2 +1,6 @@
-# LotMxMinecraftxNinjagoxPVP
-A PVP game based off of a cross mix of Lord of the Mysteries, Mincraft, and Ninjago. 
+# PVPUltimata
+
+A game where players can control blocks that move around. The blocks can fight each other in PvP, and best of three wins.
+
+## Controls
+kenny add this
