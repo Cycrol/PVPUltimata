@@ -11,7 +11,8 @@ const musicManager = {
         'sound/bgm/soldier-soldier-warrior-fighting-music-277977.mp3',
         'sound/bgm/soldier-warrior-fighting-music-261893.mp3',
         'sound/bgm/soldier-warrior-fighting-soldier-music-269377.mp3',
-        'sound/bgm/warrior-defense-fighting-music-335681 (1).mp3'
+        'sound/bgm/warrior-defense-fighting-music-335681 (1).mp3', 
+        'sound/bgm/Lloyd vs the Crystal King! - Ninjago Soundtrack ｜ Crystalized Season 15 [vgZK84oca3k].mp3'
     ],
     
     init() {
