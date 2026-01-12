@@ -149,6 +149,13 @@ const player1 = {
 
     applySprite() {
         this.element.style.backgroundColor = this.sprite.color;
+        this.element.style.display = 'flex';
+        this.element.style.alignItems = 'center';
+        this.element.style.justifyContent = 'center';
+        this.element.style.color = '#fff';
+        this.element.style.fontSize = '24px';
+        this.element.style.fontWeight = 'bold';
+        this.element.textContent = '1';
         if (this.sprite.shape === 'triangle') {
             this.element.style.clip = 'polygon(50% 0%, 100% 100%, 0% 100%)';
         }
@@ -157,19 +164,26 @@ const player1 = {
     update() {
         if (!spriteSelection.gameStarted) return;
 
-        // Handle movement input
-        if (input.a) {
-            this.velocityX = -this.MOVE_SPEED;
-        } else if (input.d) {
-            this.velocityX = this.MOVE_SPEED;
+        // Check if paralyzed
+        const isParalyzed = typeof paralysisSystem !== 'undefined' && paralysisSystem.isParalyzed('player1');
+
+        // Handle movement input (blocked if paralyzed)
+        if (!isParalyzed) {
+            if (input.a) {
+                this.velocityX = -this.MOVE_SPEED;
+            } else if (input.d) {
+                this.velocityX = this.MOVE_SPEED;
+            } else {
+                this.velocityX = 0;
+            }
+
+            // Handle jump input (blocked if paralyzed)
+            if (input.w && !this.isJumping) {
+                this.velocityY = this.JUMP_STRENGTH;
+                this.isJumping = true;
+            }
         } else {
             this.velocityX = 0;
-        }
-
-        // Handle jump input
-        if (input.w && !this.isJumping) {
-            this.velocityY = this.JUMP_STRENGTH;
-            this.isJumping = true;
         }
 
         // Apply gravity
@@ -234,9 +248,38 @@ const player1 = {
         const container = document.getElementById('gameContainer');
         const maxX = container.clientWidth - this.WIDTH;
 
-        // Boundary checking (left and right)
-        if (this.x < 0) this.x = 0;
-        if (this.x > maxX) this.x = maxX;
+        // Boundary checking (left and right) with bounce on jump
+        if (this.x < 0) {
+            this.x = 0;
+            if (input.w && this.velocityY < 0) {
+                // Bounce up and away when jumping into left wall
+                this.velocityX = this.MOVE_SPEED * 2;
+                this.velocityY = this.JUMP_STRENGTH * 1.5;
+                this.isJumping = true;
+            }
+        }
+        if (this.x > maxX) {
+            this.x = maxX;
+            if (input.w && this.velocityY < 0) {
+                // Bounce up and away when jumping into right wall
+                this.velocityX = -this.MOVE_SPEED * 2;
+                this.velocityY = this.JUMP_STRENGTH * 1.5;
+                this.isJumping = true;
+            }
+        }
+        
+        // Upper barrier to prevent infinite wall jumps
+        const UPPER_BARRIER = typeof gameState !== 'undefined' ? gameState.UPPER_BARRIER : 100;
+        if (this.y < UPPER_BARRIER) {
+            this.y = UPPER_BARRIER;
+            this.velocityY = Math.max(0, this.velocityY);  // Push downward
+            // Push away from walls if at upper barrier
+            if (this.x < maxX / 2) {
+                this.velocityX = this.MOVE_SPEED;
+            } else {
+                this.velocityX = -this.MOVE_SPEED;
+            }
+        }
 
         // Terrain collision - improved
         const below = terrain.getBlockBelow(this.x, this.y, this.WIDTH, this.HEIGHT);
