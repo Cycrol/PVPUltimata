@@ -4,6 +4,7 @@ const terrain = {
     BLOCK_SIZE: 40,
     columns: {},
     generated: false,
+    skin: null, // url string for PNG skin (e.g. 'images/grass.png')
 
     generateTerrain() {
         if (this.generated) return;
@@ -28,13 +29,21 @@ const terrain = {
             for (let y = heightVariation; y < height; y += this.BLOCK_SIZE) {
                 const block = document.createElement('div');
                 block.className = 'terrain-block';
+                block.style.position = 'absolute';
                 block.style.left = x + 'px';
                 block.style.top = y + 'px';
                 block.style.width = this.BLOCK_SIZE + 'px';
                 block.style.height = this.BLOCK_SIZE + 'px';
+                // If a skin is set, use it as a background image
+                if (this.skin) {
+                    block.style.backgroundImage = `url(${this.skin})`;
+                    block.style.backgroundSize = 'cover';
+                    block.style.backgroundRepeat = 'no-repeat';
+                    block.style.backgroundPosition = 'center';
+                }
                 terrainContainer.appendChild(block);
 
-                const blk = { x: x, y: y, width: this.BLOCK_SIZE, height: this.BLOCK_SIZE };
+                const blk = { x: x, y: y, width: this.BLOCK_SIZE, height: this.BLOCK_SIZE, el: block };
                 this.blocks.push(blk);
                 const col = Math.floor(x / this.BLOCK_SIZE);
                 if (!this.columns[col]) this.columns[col] = [];
@@ -47,6 +56,25 @@ const terrain = {
         }
         // keep a flat blocks array sorted (optional)
         this.blocks.sort((a,b) => (a.x - b.x) || (a.y - b.y));
+    },
+
+    // Set a PNG (or any image) as the terrain skin. Updates existing blocks if generated.
+    setSkin(url) {
+        this.skin = url;
+        // Update already-created block elements
+        if (!this.generated) return;
+        for (const blk of this.blocks) {
+            if (blk.el) {
+                if (this.skin) {
+                    blk.el.style.backgroundImage = `url(${this.skin})`;
+                    blk.el.style.backgroundSize = 'cover';
+                    blk.el.style.backgroundRepeat = 'no-repeat';
+                    blk.el.style.backgroundPosition = 'center';
+                } else {
+                    blk.el.style.backgroundImage = '';
+                }
+            }
+        }
     },
 
     // Find any block overlapping player's bbox (simple AABB), but optimized by columns
