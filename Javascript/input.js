@@ -27,7 +27,34 @@ const gameState = {
     UPPER_BARRIER: 100,  // Distance from top to allow
     roundActive: false,
     player1Wins: 0,
-    player2Wins: 0
+    player2Wins: 0,
+    isPaused: false
+};
+
+// Pause manager
+const pauseManager = {
+    isPaused: false,
+
+    toggle() {
+        this.isPaused = !this.isPaused;
+        gameState.isPaused = this.isPaused;
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        if (pauseOverlay) {
+            pauseOverlay.style.display = this.isPaused ? 'flex' : 'none';
+        }
+    },
+
+    resume() {
+        if (this.isPaused) {
+            this.toggle();
+        }
+    },
+
+    pause() {
+        if (!this.isPaused) {
+            this.toggle();
+        }
+    }
 };
 
 // Track mouse position
@@ -116,6 +143,11 @@ const spriteSelection = {
                 if (window.player2HP <= 0) {
                     clearInterval(window.gameLoop);
                     endRound('player1');
+                    return;
+                }
+
+                // Skip update if paused
+                if (gameState.isPaused) {
                     return;
                 }
                 
@@ -262,10 +294,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Key down handler
 window.addEventListener('keydown', (e) => {
-    if (!spriteSelection.gameStarted) return;
-    
     const key = e.key.toLowerCase();
 
+    // ESC to pause/unpause (always available)
+    if (key === 'escape') {
+        if (spriteSelection.gameStarted) {
+            pauseManager.toggle();
+        }
+        return;
+    }
+
+    if (!spriteSelection.gameStarted) return;
+    
     // Player 1 (CFB for left/up/right + V for PA, 1-4 for abilities)
     if (key === 'c') input.a = true;
     if (key === 'f') input.w = true;
