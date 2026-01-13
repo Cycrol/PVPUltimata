@@ -152,6 +152,7 @@ const player1 = {
     velocityY: 0,
     isJumping: false,
     sprite: null,
+    skin: null,
     
     GRAVITY: 0.6,
     JUMP_STRENGTH: -12,
@@ -176,17 +177,36 @@ const player1 = {
     },
 
     applySprite() {
-        this.element.style.backgroundColor = this.sprite.color;
         this.element.style.display = 'flex';
         this.element.style.alignItems = 'center';
         this.element.style.justifyContent = 'center';
         this.element.style.color = '#fff';
         this.element.style.fontSize = '24px';
         this.element.style.fontWeight = 'bold';
-        this.element.textContent = '1';
-        if (this.sprite.shape === 'triangle') {
-            this.element.style.clip = 'polygon(50% 0%, 100% 100%, 0% 100%)';
+        // If a custom skin image is set, use it. Otherwise use sprite color/shape/text.
+        if (this.skin) {
+            this.element.style.backgroundImage = `url(${this.skin})`;
+            this.element.style.backgroundSize = 'cover';
+            this.element.style.backgroundRepeat = 'no-repeat';
+            this.element.style.backgroundPosition = 'center';
+            this.element.textContent = '';
+            this.element.style.clip = '';
+        } else {
+            this.element.style.backgroundImage = '';
+            this.element.style.backgroundColor = this.sprite.color;
+            this.element.textContent = '1';
+            if (this.sprite.shape === 'triangle') {
+                this.element.style.clip = 'polygon(50% 0%, 100% 100%, 0% 100%)';
+            } else {
+                this.element.style.clip = '';
+            }
         }
+    },
+
+    setSkin(url) {
+        this.skin = url;
+        // update immediately
+        this.applySprite();
     },
 
     update() {

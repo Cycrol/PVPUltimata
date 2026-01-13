@@ -25,10 +25,50 @@
         </div>
     </div>
 
+    <div id="skinControls" style="position:fixed; right:12px; top:12px; background:rgba(0,0,0,0.6); color:#fff; padding:8px; border-radius:6px; z-index:9999; width:260px;">
+        <div style="font-weight:bold; margin-bottom:6px;">Terrain Skin</div>
+        <select id="skinSelect">
+            <option value="">Default (none)</option>
+            <option value="skins/grass.png">skins/grass.png</option>
+            <option value="skins/dirt.png">skins/dirt.png</option>
+            <option value="skins/stone.png">skins/stone.png</option>
+        </select>
+        <div style="margin-top:6px; display:flex; gap:6px;">
+            <input id="skinUrl" placeholder="Image URL" style="flex:1;" />
+            <button id="applySkinBtn">Apply</button>
+        </div>
+        <div style="margin-top:6px; font-size:12px;">Or upload: <input id="skinFile" type="file" accept="image/*" /></div>
+        <hr style="border:none; height:1px; background:#444; margin:8px 0;" />
+
+        <div style="font-weight:bold; margin-bottom:6px;">Player 1 Skin</div>
+        <select id="p1SkinSelect">
+            <option value="">Default</option>
+            <option value="skins/p1_hat.png">skins/p1_hat.png</option>
+        </select>
+        <div style="margin-top:6px; display:flex; gap:6px;">
+            <input id="p1SkinUrl" placeholder="Image URL" style="flex:1;" />
+            <button id="applyP1SkinBtn">Apply</button>
+        </div>
+        <div style="margin-top:6px; font-size:12px;">Upload: <input id="p1SkinFile" type="file" accept="image/*" /></div>
+        <hr style="border:none; height:1px; background:#444; margin:8px 0;" />
+
+        <div style="font-weight:bold; margin-bottom:6px;">Player 2 Skin</div>
+        <select id="p2SkinSelect">
+            <option value="">Default</option>
+            <option value="skins/p2_hat.png">skins/p2_hat.png</option>
+        </select>
+        <div style="margin-top:6px; display:flex; gap:6px;">
+            <input id="p2SkinUrl" placeholder="Image URL" style="flex:1;" />
+            <button id="applyP2SkinBtn">Apply</button>
+        </div>
+        <div style="margin-top:6px; font-size:12px;">Upload: <input id="p2SkinFile" type="file" accept="image/*" /></div>
+        <div style="margin-top:6px; font-size:12px;">Tip: use small PNGs and enable CORS for remote URLs.</div>
+    </div>
+
     <script src="Javascript/music.js"></script>
     <script src="Javascript/input.js"></script>
     <script src="Javascript/player_1.js"></script>
     <script src="Javascript/player_2.js"></script>
+    <script src="Javascript/skins.js"></script>
 </body>
-
 </html>
