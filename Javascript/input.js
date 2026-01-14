@@ -116,6 +116,33 @@ const spriteSelection = {
         document.getElementById('info').style.display = 'block';
         gameState.roundActive = true;
         
+        // Update info display with current key binds
+        const infoDiv = document.getElementById('info');
+        if (infoDiv) {
+            const p1Left = keyBindsManager.getKeyBind('player1', 'moveLeft').toUpperCase();
+            const p1Up = keyBindsManager.getKeyBind('player1', 'moveUp').toUpperCase();
+            const p1Right = keyBindsManager.getKeyBind('player1', 'moveRight').toUpperCase();
+            const p1Attack = keyBindsManager.getKeyBind('player1', 'normalAttack').toUpperCase();
+            const p1Ab1 = keyBindsManager.getKeyBind('player1', 'ability1').toUpperCase();
+            const p1Ab2 = keyBindsManager.getKeyBind('player1', 'ability2').toUpperCase();
+            const p1Ab3 = keyBindsManager.getKeyBind('player1', 'ability3').toUpperCase();
+            const p1Ab4 = keyBindsManager.getKeyBind('player1', 'ability4').toUpperCase();
+
+            const p2Left = keyBindsManager.getKeyBind('player2', 'moveLeft').toUpperCase();
+            const p2Up = keyBindsManager.getKeyBind('player2', 'moveUp').toUpperCase();
+            const p2Right = keyBindsManager.getKeyBind('player2', 'moveRight').toUpperCase();
+            const p2Attack = keyBindsManager.getKeyBind('player2', 'normalAttack').toUpperCase();
+            const p2Ab1 = keyBindsManager.getKeyBind('player2', 'ability1').toUpperCase();
+            const p2Ab2 = keyBindsManager.getKeyBind('player2', 'ability2').toUpperCase();
+            const p2Ab3 = keyBindsManager.getKeyBind('player2', 'ability3').toUpperCase();
+            const p2Ab4 = keyBindsManager.getKeyBind('player2', 'ability4').toUpperCase();
+
+            infoDiv.innerHTML = `
+                <div><strong>Player 1:</strong> ${p1Left} ${p1Up} ${p1Right} to move, ${p1Attack} for attack, abilities: ${p1Ab1} ${p1Ab2} ${p1Ab3} ${p1Ab4}</div>
+                <div><strong>Player 2:</strong> ${p2Left} ${p2Up} ${p2Right} to move, ${p2Attack} for attack, abilities: ${p2Ab1} ${p2Ab2} ${p2Ab3} ${p2Ab4}</div>
+            `;
+        }
+        
         // Start background music
         try {
             if (typeof musicManager !== 'undefined' && typeof musicManager.start === 'function') {
@@ -290,6 +317,22 @@ window.addEventListener('DOMContentLoaded', () => {
     spriteOptions.appendChild(player2Section);
     
     spriteSelection.updateUI();
+
+    // Add event listener to key binds settings button
+    const keyBindsBtn = document.getElementById('keyBindsMenuBtn');
+    if (keyBindsBtn) {
+        keyBindsBtn.addEventListener('click', () => {
+            keyBindsUI.openModal();
+        });
+        keyBindsBtn.addEventListener('mouseover', () => {
+            keyBindsBtn.style.background = '#FFC700';
+            keyBindsBtn.style.transform = 'scale(1.05)';
+        });
+        keyBindsBtn.addEventListener('mouseout', () => {
+            keyBindsBtn.style.background = '#FFD700';
+            keyBindsBtn.style.transform = 'scale(1)';
+        });
+    }
 });
 
 // Key down handler
@@ -306,25 +349,43 @@ window.addEventListener('keydown', (e) => {
 
     if (!spriteSelection.gameStarted) return;
     
-    // Player 1 (CFB for left/up/right + V for PA, 1-4 for abilities)
-    if (key === 'c') input.a = true;
-    if (key === 'f') input.w = true;
-    if (key === 'b') input.d = true;
-    if (key === 'v') { input.s = true; player1_PA(); }
-    if (key === '1') { input.key1 = true; player1_ability_1(); }
-    if (key === '2') { input.key2 = true; player1_ability_2(); }
-    if (key === '3') { input.key3 = true; player1_ability_3(); }
-    if (key === '4') { input.key4 = true; player1_ability_4(); }
+    // Check Player 1 key binds
+    const p1MoveLeft = keyBindsManager.getKeyBind('player1', 'moveLeft');
+    const p1MoveUp = keyBindsManager.getKeyBind('player1', 'moveUp');
+    const p1MoveRight = keyBindsManager.getKeyBind('player1', 'moveRight');
+    const p1NormalAttack = keyBindsManager.getKeyBind('player1', 'normalAttack');
+    const p1Ability1 = keyBindsManager.getKeyBind('player1', 'ability1');
+    const p1Ability2 = keyBindsManager.getKeyBind('player1', 'ability2');
+    const p1Ability3 = keyBindsManager.getKeyBind('player1', 'ability3');
+    const p1Ability4 = keyBindsManager.getKeyBind('player1', 'ability4');
 
-    // Player 2 (Arrow keys + Down for PA, 7-0 for abilities)
-    if (key === 'arrowup') input.i = true;
-    if (key === 'arrowleft') input.j = true;
-    if (key === 'arrowright') input.l = true;
-    if (key === 'arrowdown') { input.k = true; player2_PA(); }
-    if (key === '7') { input.key7 = true; player2_ability_1(); }
-    if (key === '8') { input.key8 = true; player2_ability_2(); }
-    if (key === '9') { input.key9 = true; player2_ability_3(); }
-    if (key === '0') { input.key0 = true; player2_ability_4(); }
+    if (key === p1MoveLeft) input.a = true;
+    if (key === p1MoveUp) input.w = true;
+    if (key === p1MoveRight) input.d = true;
+    if (key === p1NormalAttack) { input.s = true; player1_PA(); }
+    if (key === p1Ability1) { input.key1 = true; player1_ability_1(); }
+    if (key === p1Ability2) { input.key2 = true; player1_ability_2(); }
+    if (key === p1Ability3) { input.key3 = true; player1_ability_3(); }
+    if (key === p1Ability4) { input.key4 = true; player1_ability_4(); }
+
+    // Check Player 2 key binds
+    const p2MoveLeft = keyBindsManager.getKeyBind('player2', 'moveLeft');
+    const p2MoveUp = keyBindsManager.getKeyBind('player2', 'moveUp');
+    const p2MoveRight = keyBindsManager.getKeyBind('player2', 'moveRight');
+    const p2NormalAttack = keyBindsManager.getKeyBind('player2', 'normalAttack');
+    const p2Ability1 = keyBindsManager.getKeyBind('player2', 'ability1');
+    const p2Ability2 = keyBindsManager.getKeyBind('player2', 'ability2');
+    const p2Ability3 = keyBindsManager.getKeyBind('player2', 'ability3');
+    const p2Ability4 = keyBindsManager.getKeyBind('player2', 'ability4');
+
+    if (key === p2MoveUp) input.i = true;
+    if (key === p2MoveLeft) input.j = true;
+    if (key === p2MoveRight) input.l = true;
+    if (key === p2NormalAttack) { input.k = true; player2_PA(); }
+    if (key === p2Ability1) { input.key7 = true; player2_ability_1(); }
+    if (key === p2Ability2) { input.key8 = true; player2_ability_2(); }
+    if (key === p2Ability3) { input.key9 = true; player2_ability_3(); }
+    if (key === p2Ability4) { input.key0 = true; player2_ability_4(); }
 });
 
 // Key up handler
@@ -333,25 +394,43 @@ window.addEventListener('keyup', (e) => {
     
     const key = e.key.toLowerCase();
 
-    // Player 1 (CFB + V, 1-4)
-    if (key === 'f') input.w = false;
-    if (key === 'c') input.a = false;
-    if (key === 'v') input.s = false;
-    if (key === 'b') input.d = false;
-    if (key === '1') input.key1 = false;
-    if (key === '2') input.key2 = false;
-    if (key === '3') input.key3 = false;
-    if (key === '4') input.key4 = false;
+    // Check Player 1 key binds
+    const p1MoveLeft = keyBindsManager.getKeyBind('player1', 'moveLeft');
+    const p1MoveUp = keyBindsManager.getKeyBind('player1', 'moveUp');
+    const p1MoveRight = keyBindsManager.getKeyBind('player1', 'moveRight');
+    const p1NormalAttack = keyBindsManager.getKeyBind('player1', 'normalAttack');
+    const p1Ability1 = keyBindsManager.getKeyBind('player1', 'ability1');
+    const p1Ability2 = keyBindsManager.getKeyBind('player1', 'ability2');
+    const p1Ability3 = keyBindsManager.getKeyBind('player1', 'ability3');
+    const p1Ability4 = keyBindsManager.getKeyBind('player1', 'ability4');
 
-    // Player 2 (Arrow keys + Down, 7-0)
-    if (key === 'arrowup') input.i = false;
-    if (key === 'arrowleft') input.j = false;
-    if (key === 'arrowdown') input.k = false;
-    if (key === 'arrowright') input.l = false;
-    if (key === '7') input.key7 = false;
-    if (key === '8') input.key8 = false;
-    if (key === '9') input.key9 = false;
-    if (key === '0') input.key0 = false;
+    if (key === p1MoveUp) input.w = false;
+    if (key === p1MoveLeft) input.a = false;
+    if (key === p1NormalAttack) input.s = false;
+    if (key === p1MoveRight) input.d = false;
+    if (key === p1Ability1) input.key1 = false;
+    if (key === p1Ability2) input.key2 = false;
+    if (key === p1Ability3) input.key3 = false;
+    if (key === p1Ability4) input.key4 = false;
+
+    // Check Player 2 key binds
+    const p2MoveLeft = keyBindsManager.getKeyBind('player2', 'moveLeft');
+    const p2MoveUp = keyBindsManager.getKeyBind('player2', 'moveUp');
+    const p2MoveRight = keyBindsManager.getKeyBind('player2', 'moveRight');
+    const p2NormalAttack = keyBindsManager.getKeyBind('player2', 'normalAttack');
+    const p2Ability1 = keyBindsManager.getKeyBind('player2', 'ability1');
+    const p2Ability2 = keyBindsManager.getKeyBind('player2', 'ability2');
+    const p2Ability3 = keyBindsManager.getKeyBind('player2', 'ability3');
+    const p2Ability4 = keyBindsManager.getKeyBind('player2', 'ability4');
+
+    if (key === p2MoveUp) input.i = false;
+    if (key === p2MoveLeft) input.j = false;
+    if (key === p2NormalAttack) input.k = false;
+    if (key === p2MoveRight) input.l = false;
+    if (key === p2Ability1) input.key7 = false;
+    if (key === p2Ability2) input.key8 = false;
+    if (key === p2Ability3) input.key9 = false;
+    if (key === p2Ability4) input.key0 = false;
 });
 
 // Helper function to check if a projectile hits terrain

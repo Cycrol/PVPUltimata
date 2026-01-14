@@ -1,0 +1,80 @@
+# Quick Start Guide - Key Binds Settings
+
+## What's New?
+Your PVP Ultimata game now has a **Key Binds Settings** option in the main menu! This allows you to customize the keyboard controls for both players before you start playing.
+
+## How to Access Key Binds Settings
+
+1. **Start the game** - Open the game in your browser
+2. **Look for the button** - In the sprite selection menu, you'll see a gold button that says "⚙️ Key Binds Settings"
+3. **Click it** - Click to open the key binds configuration modal
+
+## How to Customize Your Key Binds
+
+### Step-by-Step:
+1. Open the Key Binds Settings modal
+2. Choose which player's controls you want to change (Player 1 or Player 2)
+3. Click on any key button you want to rebind (e.g., "Move Up", "Ability 1", etc.)
+4. When it says "Press any key...", simply press the key you want to use
+5. The button will update with your new key choice
+6. Repeat for other actions
+7. Click "Save & Close" when done
+8. Your settings are automatically saved!
+
+### Tips:
+- Press **ESC** while binding a key to cancel that action
+- Click **Reset to Defaults** to restore all original key binds
+- Your custom key binds are saved in your browser and will persist even after closing the game
+- Both players can have completely different key schemes
+
+## Default Key Binds
+
+### Player 1:
+- **Move Left**: C
+- **Move Up**: F
+- **Move Right**: B
+- **Normal Attack**: V
+- **Ability 1**: 1
+- **Ability 2**: 2
+- **Ability 3**: 3
+- **Ability 4**: 4
+
+### Player 2:
+- **Move Left**: ← (Left Arrow)
+- **Move Up**: ↑ (Up Arrow)
+- **Move Right**: → (Right Arrow)
+- **Normal Attack**: 6
+- **Ability 1**: 7
+- **Ability 2**: 8
+- **Ability 3**: 9
+- **Ability 4**: 0
+
+## In-Game Key Binds Display
+
+Once you start playing, the game will display the current key binds at the top of the screen, so you always know what keys to press!
+
+## Troubleshooting
+
+**Q: I changed my key binds but they're not working in the game.**
+A: Make sure you clicked "Save & Close" to save your changes. Your settings should take effect immediately.
+
+**Q: Can I have the same key for multiple actions?**
+A: While technically possible, it's not recommended as it will cause conflicts. Each key should be unique to prevent issues.
+
+**Q: How do I reset to the original controls?**
+A: Click the "Reset to Defaults" button in the Key Binds Settings modal. Confirm when asked.
+
+**Q: Will my key binds be saved if I close the browser?**
+A: Yes! Your custom key binds are saved in your browser's local storage and will be remembered the next time you play.
+
+**Q: Can I use special keys like Spacebar?**
+A: Yes! The system supports all standard keyboard keys including special keys like Space, Enter, Shift, Ctrl, Alt, etc.
+
+## Need Help?
+
+If you encounter any issues:
+1. Try clicking "Reset to Defaults" to restore original bindings
+2. Refresh the page (F5) and try again
+3. Check that you're not using a key that conflicts with your browser shortcuts
+
+Enjoy customized controls! Have fun playing! 🎮
