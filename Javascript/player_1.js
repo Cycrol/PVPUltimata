@@ -19,11 +19,11 @@ const terrain = {
         let heightVariation = groundLevel;
 
         for (let x = 0; x < width; x += this.BLOCK_SIZE) {
-            // Random height variation for irregular terrain
-            if (Math.random() > 0.7) {
+            // Random height variation for irregular terrain - good elevation differences
+            if (Math.random() > 0.6) {
                 heightVariation += (Math.random() > 0.5 ? 1 : -1) * this.BLOCK_SIZE;
             }
-            heightVariation = Math.max(groundLevel - 150, Math.min(groundLevel + 50, heightVariation));
+            heightVariation = Math.max(groundLevel - 120, Math.min(groundLevel, heightVariation));
 
             // Create blocks from the varied height to the bottom
             for (let y = heightVariation; y < height; y += this.BLOCK_SIZE) {
@@ -215,12 +215,16 @@ const player1 = {
         // Check if paralyzed
         const isParalyzed = typeof paralysisSystem !== 'undefined' && paralysisSystem.isParalyzed('player1');
 
+        // Get speed multiplier from power-ups
+        const speedMult = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getSpeedMult('player1') : 1.0;
+        const adjustedSpeed = this.MOVE_SPEED * speedMult;
+
         // Handle movement input (blocked if paralyzed)
         if (!isParalyzed) {
             if (input.a) {
-                this.velocityX = -this.MOVE_SPEED;
+                this.velocityX = -adjustedSpeed;
             } else if (input.d) {
-                this.velocityX = this.MOVE_SPEED;
+                this.velocityX = adjustedSpeed;
             } else {
                 this.velocityX = 0;
             }
@@ -249,7 +253,7 @@ const player1 = {
                     // find nearest block on the right
                     let minX = Infinity;
                     for (const b of hBlocks) if (b.x < minX) minX = b.x;
-                    if (minX !== Infinity) newX = minX - this.WIDTH - 0.01;
+                    if (minX !== Infinity) newX = minX - this.WIDTH - 0.5;
                 } else {
                     // moving left: find furthest right edge
                     let maxRight = -Infinity;
@@ -257,7 +261,7 @@ const player1 = {
                         const rightEdge = b.x + b.width;
                         if (rightEdge > maxRight) maxRight = rightEdge;
                     }
-                    if (maxRight !== -Infinity) newX = maxRight + 0.01;
+                    if (maxRight !== -Infinity) newX = maxRight + 0.5;
                 }
                 this.velocityX = 0;
             }

@@ -64,12 +64,16 @@ const player2 = {
         // Check if paralyzed
         const isParalyzed = typeof paralysisSystem !== 'undefined' && paralysisSystem.isParalyzed('player2');
 
+        // Get speed multiplier from power-ups
+        const speedMult = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getSpeedMult('player2') : 1.0;
+        const adjustedSpeed = this.MOVE_SPEED * speedMult;
+
         // Handle movement input (I/J/K/L) (blocked if paralyzed)
         if (!isParalyzed) {
             if (input.j) {
-                this.velocityX = -this.MOVE_SPEED;
+                this.velocityX = -adjustedSpeed;
             } else if (input.l) {
-                this.velocityX = this.MOVE_SPEED;
+                this.velocityX = adjustedSpeed;
             } else {
                 this.velocityX = 0;
             }
@@ -97,14 +101,14 @@ const player2 = {
                 if (this.velocityX > 0) {
                     let minX = Infinity;
                     for (const b of hBlocks) if (b.x < minX) minX = b.x;
-                    if (minX !== Infinity) newX = minX - this.WIDTH - 0.01;
+                    if (minX !== Infinity) newX = minX - this.WIDTH - 0.5;
                 } else {
                     let maxRight = -Infinity;
                     for (const b of hBlocks) {
                         const rightEdge = b.x + b.width;
                         if (rightEdge > maxRight) maxRight = rightEdge;
                     }
-                    if (maxRight !== -Infinity) newX = maxRight + 0.01;
+                    if (maxRight !== -Infinity) newX = maxRight + 0.5;
                 }
                 this.velocityX = 0;
             }

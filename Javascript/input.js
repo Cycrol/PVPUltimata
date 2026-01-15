@@ -116,6 +116,11 @@ const spriteSelection = {
         document.getElementById('info').style.display = 'block';
         gameState.roundActive = true;
         
+        // Initialize power-up system
+        if (typeof powerUpSystem !== 'undefined') {
+            powerUpSystem.init();
+        }
+        
         // Update info display with current key binds
         const infoDiv = document.getElementById('info');
         if (infoDiv) {
@@ -182,6 +187,8 @@ const spriteSelection = {
                 try { player2.update(); } catch (e) {}
                 try { projectiles.update(); } catch (e) {}
                 try { projectiles.render(); } catch (e) {}
+                try { powerUpSystem.update(); } catch (e) {}
+                try { powerUpSystem.render(); } catch (e) {}
                 try { abilityCooldowns.update(); } catch (e) {}
                 try { updateAbilityUI('player1'); } catch (e) {}
                 try { updateAbilityUI('player2'); } catch (e) {}
@@ -480,6 +487,263 @@ const paralysisSystem = {
     }
 };
 
+// Power-up system
+const powerUpSystem = {
+    list: [],
+    spawnTimer: 0,
+    spawnInterval: 15, // spawn every 15 seconds
+    
+    // Buff tracking for each player
+    buffs: {
+        player1: {
+            strengthEnd: 0,
+            weaknessEnd: 0,
+            speedEnd: 0
+        },
+        player2: {
+            strengthEnd: 0,
+            weaknessEnd: 0,
+            speedEnd: 0
+        }
+    },
+    
+    init() {
+        this.spawnTimer = 0;
+    },
+    
+    update() {
+        this.spawnTimer += 1/60; // increment by frame time
+        
+        // Spawn new power-up every 20 seconds
+        if (this.spawnTimer >= this.spawnInterval) {
+            this.spawn();
+            this.spawnTimer = 0;
+        }
+        
+        // Update existing power-ups
+        for (let i = this.list.length - 1; i >= 0; i--) {
+            const powerUp = this.list[i];
+            powerUp.update();
+            if (powerUp.destroyed) {
+                if (powerUp.element && powerUp.element.parentNode) {
+                    powerUp.element.remove();
+                }
+                this.list.splice(i, 1);
+            }
+        }
+    },
+    
+    render() {
+        for (const powerUp of this.list) {
+            powerUp.render();
+        }
+    },
+    
+    spawn() {
+        const container = document.getElementById('gameContainer');
+        const types = ['strength', 'weakness', 'speed', 'healing'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        let x = Math.random() * (container.clientWidth - 40);
+        // Spawn directly above ground - find topmost block at this x position
+        let groundY = container.clientHeight;
+        for (const block of terrain.blocks) {
+            if (block.x <= x && block.x + block.width >= x && block.y < groundY) {
+                groundY = block.y;
+            }
+        }
+        let y = groundY - 50;
+        
+        const element = document.createElement('div');
+        element.style.position = 'absolute';
+        element.style.zIndex = '50';
+        element.style.cursor = 'pointer';
+        
+        let color, display;
+        switch(type) {
+            case 'strength':
+                color = '#ff4444';
+                display = 'STR';
+                break;
+            case 'weakness':
+                color = '#4444ff';
+                display = 'WEK';
+                break;
+            case 'speed':
+                color = '#44ff44';
+                display = 'SPD';
+                break;
+            case 'healing':
+                color = '#ffaa00';
+                display = 'HEL';
+                break;
+        }
+        
+        element.style.width = '30px';
+        element.style.height = '30px';
+        element.style.backgroundColor = color;
+        element.style.borderRadius = '50%';
+        element.style.display = 'flex';
+        element.style.alignItems = 'center';
+        element.style.justifyContent = 'center';
+        element.style.color = '#fff';
+        element.style.fontWeight = 'bold';
+        element.style.fontSize = '11px';
+        element.style.border = '2px solid #fff';
+        element.textContent = display;
+        
+        container.appendChild(element);
+        
+        const powerUp = {
+            type: type,
+            x: x,
+            y: y,
+            element: element,
+            width: 30,
+            height: 30,
+            destroyed: false,
+            lifetime: 60, // 60 seconds before despawn
+            
+            update() {
+                this.lifetime -= 1/60;
+                if (this.lifetime <= 0) {
+                    this.destroyed = true;
+                    return;
+                }
+                
+                // Check collision with players
+                const p1CenterX = player1.x + player1.WIDTH / 2;
+                const p1CenterY = player1.y + player1.HEIGHT / 2;
+                const dist1 = Math.sqrt((this.x - p1CenterX) ** 2 + (this.y - p1CenterY) ** 2);
+                
+                if (dist1 < 40) {
+                    powerUpSystem.applyBuff('player1', this.type);
+                    this.destroyed = true;
+                    return;
+                }
+                
+                const p2CenterX = player2.x + player2.WIDTH / 2;
+                const p2CenterY = player2.y + player2.HEIGHT / 2;
+                const dist2 = Math.sqrt((this.x - p2CenterX) ** 2 + (this.y - p2CenterY) ** 2);
+                
+                if (dist2 < 40) {
+                    powerUpSystem.applyBuff('player2', this.type);
+                    this.destroyed = true;
+                    return;
+                }
+            },
+            
+            render() {
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+            }
+        };
+        
+        this.list.push(powerUp);
+    },
+    
+    applyBuff(player, type) {
+        const buffs = this.buffs[player];
+        const now = Date.now();
+        const buffDuration = 8; // 8 seconds
+        
+        switch(type) {
+            case 'strength':
+                buffs.strengthEnd = now + (buffDuration * 1000);
+                break;
+            case 'weakness':
+                buffs.weaknessEnd = now + (buffDuration * 1000);
+                break;
+            case 'speed':
+                buffs.speedEnd = now + (buffDuration * 1000);
+                break;
+            case 'healing':
+                // Heal 20% of max health and show AOE visual
+                const healAmount = 200;
+                if (player === 'player1') {
+                    window.player1HP = Math.min(1000, window.player1HP + healAmount);
+                    
+                    // Create healing AOE visual (3 blocks wide = 120px)
+                    const healAOE = document.createElement('div');
+                    healAOE.style.position = 'absolute';
+                    healAOE.style.left = (player1.x - 60) + 'px'; // center on player
+                    healAOE.style.top = (player1.y - 20) + 'px';
+                    healAOE.style.width = '120px'; // 3 blocks
+                    healAOE.style.height = '80px';
+                    healAOE.style.backgroundColor = 'rgba(255, 0, 0, 0.3)'; // transparent red
+                    healAOE.style.borderRadius = '10px';
+                    healAOE.style.zIndex = '30';
+                    healAOE.style.pointerEvents = 'none';
+                    document.getElementById('gameContainer').appendChild(healAOE);
+                    
+                    // Fade out and remove
+                    setTimeout(() => {
+                        healAOE.style.opacity = '0.6';
+                    }, 50);
+                    setTimeout(() => {
+                        healAOE.style.opacity = '0.3';
+                    }, 150);
+                    setTimeout(() => {
+                        healAOE.remove();
+                    }, 300);
+                } else {
+                    window.player2HP = Math.min(1000, window.player2HP + healAmount);
+                    
+                    // Create healing AOE visual (3 blocks wide = 120px)
+                    const healAOE = document.createElement('div');
+                    healAOE.style.position = 'absolute';
+                    healAOE.style.left = (player2.x - 60) + 'px'; // center on player
+                    healAOE.style.top = (player2.y - 20) + 'px';
+                    healAOE.style.width = '120px'; // 3 blocks
+                    healAOE.style.height = '80px';
+                    healAOE.style.backgroundColor = 'rgba(255, 0, 0, 0.3)'; // transparent red
+                    healAOE.style.borderRadius = '10px';
+                    healAOE.style.zIndex = '30';
+                    healAOE.style.pointerEvents = 'none';
+                    document.getElementById('gameContainer').appendChild(healAOE);
+                    
+                    // Fade out and remove
+                    setTimeout(() => {
+                        healAOE.style.opacity = '0.6';
+                    }, 50);
+                    setTimeout(() => {
+                        healAOE.style.opacity = '0.3';
+                    }, 150);
+                    setTimeout(() => {
+                        healAOE.remove();
+                    }, 300);
+                }
+                updateHUD();
+                break;
+        }
+    },
+    
+    hasStrength(player) {
+        return Date.now() < this.buffs[player].strengthEnd;
+    },
+    
+    hasWeakness(player) {
+        return Date.now() < this.buffs[player].weaknessEnd;
+    },
+    
+    hasSpeed(player) {
+        return Date.now() < this.buffs[player].speedEnd;
+    },
+    
+    getDamageMult(player) {
+        let mult = 1.0;
+        if (this.hasStrength(player)) mult *= 1.2;
+        if (this.hasWeakness(player)) mult *= 0.8;
+        return mult;
+    },
+    
+    getSpeedMult(player) {
+        let mult = 1.0;
+        if (this.hasSpeed(player)) mult *= 1.5;
+        return mult;
+    }
+};
+
 // Projectile system
 const projectiles = {
     list: [],
@@ -650,6 +914,7 @@ function lorMystery_player1_PA() {
         startX: player1CenterX,
         startY: player1CenterY,
         maxRange: 240,
+        knockbackAmount: 0.3, // blocks of knockback
         
         update() {
             this.x += this.vx;
@@ -683,7 +948,11 @@ function lorMystery_player1_PA() {
                 const player2CenterY = player2.y + player2.HEIGHT / 2;
                 const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                 if (dist < 40) {
-                    window.player2HP = Math.max(0, window.player2HP - this.damage);
+                    // Apply damage multiplier from buffs
+                    const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
+                    const finalDamage = Math.round(this.damage * damageMultiplier);
+                    window.player2HP = Math.max(0, window.player2HP - finalDamage);
+                    
                     updateHUD();
                     this.destroyed = true;
                     this.element.remove();
@@ -702,9 +971,9 @@ function lorMystery_player1_PA() {
 }
 
 function lorMystery_player1_ability_1() {
-    // Regain 1% of lost health
+    // Regain 3% of lost health
     const healthLost = 1000 - window.player1HP;
-    const healthRegain = Math.ceil(healthLost * 0.01);
+    const healthRegain = Math.ceil(healthLost * 0.03);
     window.player1HP = Math.min(1000, window.player1HP + healthRegain);
     updateHUD();
     
@@ -741,6 +1010,7 @@ function lorMystery_player1_ability_1() {
             damage: 10,
             destroyed: false,
             owner: 'player1',
+            hasHitPlayer2: false,
             
             update() {
                 this.x += this.vx;
@@ -758,6 +1028,23 @@ function lorMystery_player1_ability_1() {
                     this.destroyed = true;
                     this.element.remove();
                     return;
+                }
+                
+                // Check if hitting player2
+                if (!this.hasHitPlayer2) {
+                    const player2CenterX = player2.x + player2.WIDTH / 2;
+                    const player2CenterY = player2.y + player2.HEIGHT / 2;
+                    const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
+                    if (dist < 40) {
+                        // Apply damage multiplier from buffs
+                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
+                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        window.player2HP = Math.max(0, window.player2HP - finalDamage);
+                        updateHUD();
+                        this.destroyed = true;
+                        this.element.remove();
+                        this.hasHitPlayer2 = true;
+                    }
                 }
             },
             
@@ -813,11 +1100,12 @@ function lorMystery_player1_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 20,
+            damage: 10,
             destroyed: false,
             owner: 'player1',
             lifetime: 0.3,
             maxLifetime: 0.3,
+            hasHitPlayer2: false,
             
             update() {
                 this.x += this.vx;
@@ -844,6 +1132,11 @@ function lorMystery_player1_ability_2() {
                     const player2CenterY = player2.y + player2.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                     if (dist < 50) {
+                        // Apply damage multiplier from buffs
+                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
+                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        window.player2HP = Math.max(0, window.player2HP - finalDamage);
+                        updateHUD();
                         paralysisSystem.paralyze('player2', 10);
                         this.hasHitPlayer2 = true;
                     }
@@ -1072,6 +1365,7 @@ function lorMystery_player2_PA() {
         startX: player2CenterX,
         startY: player2CenterY,
         maxRange: 240,
+        knockbackAmount: 0.3, // blocks of knockback
         
         update() {
             this.x += this.vx;
@@ -1105,7 +1399,11 @@ function lorMystery_player2_PA() {
                 const player1CenterY = player1.y + player1.HEIGHT / 2;
                 const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
                 if (dist < 40) {
-                    window.player1HP = Math.max(0, window.player1HP - this.damage);
+                    // Apply damage multiplier from buffs
+                    const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
+                    const finalDamage = Math.round(this.damage * damageMultiplier);
+                    window.player1HP = Math.max(0, window.player1HP - finalDamage);
+                    
                     updateHUD();
                     this.destroyed = true;
                     this.element.remove();
@@ -1124,9 +1422,9 @@ function lorMystery_player2_PA() {
 }
 
 function lorMystery_player2_ability_1() {
-    // Regain 1% of lost health
+    // Regain 3% of lost health
     const healthLost = 1000 - window.player2HP;
-    const healthRegain = Math.ceil(healthLost * 0.01);
+    const healthRegain = Math.ceil(healthLost * 0.03);
     window.player2HP = Math.min(1000, window.player2HP + healthRegain);
     updateHUD();
     
@@ -1163,6 +1461,7 @@ function lorMystery_player2_ability_1() {
             damage: 10,
             destroyed: false,
             owner: 'player2',
+            hasHitPlayer1: false,
             
             update() {
                 this.x += this.vx;
@@ -1180,6 +1479,23 @@ function lorMystery_player2_ability_1() {
                     this.destroyed = true;
                     this.element.remove();
                     return;
+                }
+                
+                // Check if hitting player1
+                if (!this.hasHitPlayer1) {
+                    const player1CenterX = player1.x + player1.WIDTH / 2;
+                    const player1CenterY = player1.y + player1.HEIGHT / 2;
+                    const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
+                    if (dist < 40) {
+                        // Apply damage multiplier from buffs
+                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
+                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        window.player1HP = Math.max(0, window.player1HP - finalDamage);
+                        updateHUD();
+                        this.destroyed = true;
+                        this.element.remove();
+                        this.hasHitPlayer1 = true;
+                    }
                 }
             },
             
@@ -1236,11 +1552,12 @@ function lorMystery_player2_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 20,
+            damage: 10,
             destroyed: false,
             owner: 'player2',
             lifetime: 0.3,
             maxLifetime: 0.3,
+            hasHitPlayer1: false,
             
             update() {
                 this.x += this.vx;
@@ -1267,6 +1584,11 @@ function lorMystery_player2_ability_2() {
                     const player1CenterY = player1.y + player1.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
                     if (dist < 50) {
+                        // Apply damage multiplier from buffs
+                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
+                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        window.player1HP = Math.max(0, window.player1HP - finalDamage);
+                        updateHUD();
                         paralysisSystem.paralyze('player1', 10);
                         this.hasHitPlayer1 = true;
                     }
@@ -1519,13 +1841,6 @@ function endRound(winner) {
     if (!gameState.roundActive) return;
     gameState.roundActive = false;
     
-    // Update score
-    if (winner === 'player1') {
-        gameState.player1Wins++;
-    } else {
-        gameState.player2Wins++;
-    }
-    
     // Play game over sound
     try {
         if (typeof musicManager !== 'undefined' && typeof musicManager.playGameOver === 'function') {
@@ -1533,88 +1848,8 @@ function endRound(winner) {
         }
     } catch (e) { console.error('Error playing game over sound:', e); }
     
-    const container = document.getElementById('gameContainer');
-    
-    // Create dim overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'gameOverOverlay';
-    overlay.style.position = 'absolute';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    overlay.style.zIndex = '9999';
-    overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    
-    // Round winner text
-    const roundWinnerText = document.createElement('div');
-    roundWinnerText.style.fontSize = '60px';
-    roundWinnerText.style.fontWeight = 'bold';
-    roundWinnerText.style.color = '#ffff00';
-    roundWinnerText.style.marginBottom = '20px';
-    roundWinnerText.textContent = winner === 'player1' ? 'Player 1 Wins Round!' : 'Player 2 Wins Round!';
-    
-    // Score display
-    const scoreText = document.createElement('div');
-    scoreText.style.fontSize = '50px';
-    scoreText.style.fontWeight = 'bold';
-    scoreText.style.color = '#00ff00';
-    scoreText.style.marginBottom = '40px';
-    scoreText.textContent = `${gameState.player1Wins}-${gameState.player2Wins}`;
-    
-    // Check if someone won the series (2 wins)
-    const seriesOver = gameState.player1Wins >= 2 || gameState.player2Wins >= 2;
-    
-    // Next round / Series Over button
-    const nextButton = document.createElement('button');
-    nextButton.textContent = seriesOver ? 'RESTART SERIES' : 'NEXT ROUND';
-    nextButton.style.fontSize = '20px';
-    nextButton.style.padding = '15px 40px';
-    nextButton.style.backgroundColor = '#4CAF50';
-    nextButton.style.color = 'white';
-    nextButton.style.border = 'none';
-    nextButton.style.borderRadius = '5px';
-    nextButton.style.cursor = 'pointer';
-    nextButton.style.fontWeight = 'bold';
-    nextButton.style.transition = 'background-color 0.3s';
-    nextButton.onmouseover = () => {
-        nextButton.style.backgroundColor = '#45a049';
-    };
-    nextButton.onmouseout = () => {
-        nextButton.style.backgroundColor = '#4CAF50';
-    };
-    nextButton.onclick = () => {
-        if (seriesOver) {
-            // Restart entire series
-            location.reload();
-        } else {
-            // Start next round
-            overlay.remove();
-            resetRound();
-        }
-    };
-    
-    overlay.appendChild(roundWinnerText);
-    overlay.appendChild(scoreText);
-    
-    // Show series winner if series is over
-    if (seriesOver) {
-        const seriesWinnerText = document.createElement('div');
-        seriesWinnerText.style.fontSize = '50px';
-        seriesWinnerText.style.fontWeight = 'bold';
-        seriesWinnerText.style.color = '#ff0000';
-        seriesWinnerText.style.textShadow = '0 0 20px rgba(255, 0, 0, 0.8)';
-        seriesWinnerText.style.marginBottom = '20px';
-        seriesWinnerText.textContent = winner === 'player1' ? 'Player 1 Wins Series!' : 'Player 2 Wins Series!';
-        overlay.appendChild(seriesWinnerText);
-    }
-    
-    overlay.appendChild(nextButton);
-    container.appendChild(overlay);
+    // Single game - just end the game immediately
+    endGame(winner);
 }
 
 function resetRound() {
@@ -1667,6 +1902,23 @@ function resetRound() {
             ability2: 0,
             ability3: 0,
             ability4: 0
+        };
+    }
+    
+    // Reset power-up system
+    if (typeof powerUpSystem !== 'undefined') {
+        // Remove all power-up elements from DOM
+        for (let powerUp of powerUpSystem.list) {
+            if (powerUp.element && powerUp.element.parentNode) {
+                try {
+                    powerUp.element.remove();
+                } catch (e) {}
+            }
+        }
+        powerUpSystem.list = [];
+        powerUpSystem.buffs = {
+            player1: { strengthEnd: 0, weaknessEnd: 0, speedEnd: 0 },
+            player2: { strengthEnd: 0, weaknessEnd: 0, speedEnd: 0 }
         };
     }
     
