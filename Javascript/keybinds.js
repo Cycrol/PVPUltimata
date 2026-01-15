@@ -334,6 +334,20 @@ const keyBindsUI = {
                 keyName = 'space';
             }
 
+            // Check if this key is already bound to another action for this player
+            const existingAction = keyBindsManager.getActionForKey(player, keyName);
+            if (existingAction && existingAction !== action) {
+                // Key is already bound to another action
+                alert(`Key "${keyName.toUpperCase()}" is already bound to "${keyBindsManager.actionLabels[existingAction]}". Please choose a different key.`);
+                buttonElement.textContent = keyBindsManager.getKeyBind(player, action).toUpperCase();
+                buttonElement.style.background = '#555';
+                buttonElement.style.borderColor = '#777';
+                window.removeEventListener('keydown', handleKeyPress);
+                this.listeningForKey = false;
+                this.currentlyBinding = null;
+                return;
+            }
+
             // Set the new key bind
             keyBindsManager.setKeyBind(player, action, keyName);
 

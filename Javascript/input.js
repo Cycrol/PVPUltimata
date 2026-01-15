@@ -71,9 +71,7 @@ const spriteSelection = {
     
     sprites: {
         choices: [
-            { name: 'Lord of the Mysteries', color: '#9b59b6' },
-            { name: 'Minecraft', color: '#2ecc71' },
-            { name: 'Ninjago', color: '#111111' }
+            { name: 'Cube', color: '#9b59b6' }
         ]
     },
 
@@ -124,23 +122,28 @@ const spriteSelection = {
         // Update info display with current key binds
         const infoDiv = document.getElementById('info');
         if (infoDiv) {
-            const p1Left = keyBindsManager.getKeyBind('player1', 'moveLeft').toUpperCase();
-            const p1Up = keyBindsManager.getKeyBind('player1', 'moveUp').toUpperCase();
-            const p1Right = keyBindsManager.getKeyBind('player1', 'moveRight').toUpperCase();
-            const p1Attack = keyBindsManager.getKeyBind('player1', 'normalAttack').toUpperCase();
-            const p1Ab1 = keyBindsManager.getKeyBind('player1', 'ability1').toUpperCase();
-            const p1Ab2 = keyBindsManager.getKeyBind('player1', 'ability2').toUpperCase();
-            const p1Ab3 = keyBindsManager.getKeyBind('player1', 'ability3').toUpperCase();
-            const p1Ab4 = keyBindsManager.getKeyBind('player1', 'ability4').toUpperCase();
+            const formatKey = (keyStr) => {
+                keyStr = keyStr.toUpperCase();
+                return keyStr.replace('ARROWUP', 'UP').replace('ARROWDOWN', 'DOWN').replace('ARROWLEFT', 'LEFT').replace('ARROWRIGHT', 'RIGHT');
+            };
+            
+            const p1Left = formatKey(keyBindsManager.getKeyBind('player1', 'moveLeft'));
+            const p1Up = formatKey(keyBindsManager.getKeyBind('player1', 'moveUp'));
+            const p1Right = formatKey(keyBindsManager.getKeyBind('player1', 'moveRight'));
+            const p1Attack = formatKey(keyBindsManager.getKeyBind('player1', 'normalAttack'));
+            const p1Ab1 = formatKey(keyBindsManager.getKeyBind('player1', 'ability1'));
+            const p1Ab2 = formatKey(keyBindsManager.getKeyBind('player1', 'ability2'));
+            const p1Ab3 = formatKey(keyBindsManager.getKeyBind('player1', 'ability3'));
+            const p1Ab4 = formatKey(keyBindsManager.getKeyBind('player1', 'ability4'));
 
-            const p2Left = keyBindsManager.getKeyBind('player2', 'moveLeft').toUpperCase();
-            const p2Up = keyBindsManager.getKeyBind('player2', 'moveUp').toUpperCase();
-            const p2Right = keyBindsManager.getKeyBind('player2', 'moveRight').toUpperCase();
-            const p2Attack = keyBindsManager.getKeyBind('player2', 'normalAttack').toUpperCase();
-            const p2Ab1 = keyBindsManager.getKeyBind('player2', 'ability1').toUpperCase();
-            const p2Ab2 = keyBindsManager.getKeyBind('player2', 'ability2').toUpperCase();
-            const p2Ab3 = keyBindsManager.getKeyBind('player2', 'ability3').toUpperCase();
-            const p2Ab4 = keyBindsManager.getKeyBind('player2', 'ability4').toUpperCase();
+            const p2Left = formatKey(keyBindsManager.getKeyBind('player2', 'moveLeft'));
+            const p2Up = formatKey(keyBindsManager.getKeyBind('player2', 'moveUp'));
+            const p2Right = formatKey(keyBindsManager.getKeyBind('player2', 'moveRight'));
+            const p2Attack = formatKey(keyBindsManager.getKeyBind('player2', 'normalAttack'));
+            const p2Ab1 = formatKey(keyBindsManager.getKeyBind('player2', 'ability1'));
+            const p2Ab2 = formatKey(keyBindsManager.getKeyBind('player2', 'ability2'));
+            const p2Ab3 = formatKey(keyBindsManager.getKeyBind('player2', 'ability3'));
+            const p2Ab4 = formatKey(keyBindsManager.getKeyBind('player2', 'ability4'));
 
             infoDiv.innerHTML = `
                 <div><strong>Player 1:</strong> ${p1Left} ${p1Up} ${p1Right} to move, ${p1Attack} for attack, abilities: ${p1Ab1} ${p1Ab2} ${p1Ab3} ${p1Ab4}</div>
@@ -296,7 +299,7 @@ window.addEventListener('DOMContentLoaded', () => {
         prev1.className = 'sprite-preview';
         prev1.style.backgroundColor = choice.color;
         prev1.style.width = '40px'; prev1.style.height = '40px'; prev1.style.borderRadius = '6px';
-        const lbl1 = document.createElement('div'); lbl1.className = 'sprite-label'; lbl1.textContent = choice.name;
+        const lbl1 = document.createElement('div'); lbl1.className = 'sprite-label'; lbl1.textContent = 'Cube 1';
         opt1.appendChild(prev1); opt1.appendChild(lbl1);
         opt1.onclick = () => { spriteSelection.selectSprite(1, idx); opt1.style.outline = '3px solid #FFD700'; };
         p1Options.appendChild(opt1);
@@ -312,7 +315,7 @@ window.addEventListener('DOMContentLoaded', () => {
         prev2.className = 'sprite-preview';
         prev2.style.backgroundColor = choice.color;
         prev2.style.width = '40px'; prev2.style.height = '40px'; prev2.style.borderRadius = '6px';
-        const lbl2 = document.createElement('div'); lbl2.className = 'sprite-label'; lbl2.textContent = choice.name;
+        const lbl2 = document.createElement('div'); lbl2.className = 'sprite-label'; lbl2.textContent = 'Cube 2';
         opt2.appendChild(prev2); opt2.appendChild(lbl2);
         opt2.onclick = () => { spriteSelection.selectSprite(2, idx); opt2.style.outline = '3px solid #FFD700'; };
         p2Options.appendChild(opt2);
@@ -658,8 +661,8 @@ const powerUpSystem = {
                 buffs.speedEnd = now + (buffDuration * 1000);
                 break;
             case 'healing':
-                // Heal 20% of max health and show AOE visual
-                const healAmount = 200;
+                // Heal 100 HP and show AOE visual
+                const healAmount = 100;
                 if (player === 'player1') {
                     window.player1HP = Math.min(1000, window.player1HP + healAmount);
                     
@@ -812,7 +815,7 @@ function player1_PA() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player1', 'PA')) {
             lorMystery_player1_PA();
             abilityCooldowns.use('player1', 'PA', 0.1);
@@ -826,7 +829,7 @@ function player1_ability_1() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player1', 'ability1')) {
             lorMystery_player1_ability_1();
             abilityCooldowns.use('player1', 'ability1', 5);
@@ -840,7 +843,7 @@ function player1_ability_2() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player1', 'ability2')) {
             lorMystery_player1_ability_2();
             abilityCooldowns.use('player1', 'ability2', 25);
@@ -854,7 +857,7 @@ function player1_ability_3() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player1', 'ability3')) {
             lorMystery_player1_ability_3();
             abilityCooldowns.use('player1', 'ability3', 50);
@@ -868,7 +871,7 @@ function player1_ability_4() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player1', 'ability4')) {
             lorMystery_player1_ability_4();
             abilityCooldowns.use('player1', 'ability4', 40);
@@ -1263,7 +1266,7 @@ function player2_PA() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player2', 'PA')) {
             lorMystery_player2_PA();
             abilityCooldowns.use('player2', 'PA', 0.1);
@@ -1277,7 +1280,7 @@ function player2_ability_1() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player2', 'ability1')) {
             lorMystery_player2_ability_1();
             abilityCooldowns.use('player2', 'ability1', 5);
@@ -1291,7 +1294,7 @@ function player2_ability_2() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player2', 'ability2')) {
             lorMystery_player2_ability_2();
             abilityCooldowns.use('player2', 'ability2', 25);
@@ -1305,7 +1308,7 @@ function player2_ability_3() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player2', 'ability3')) {
             lorMystery_player2_ability_3();
             abilityCooldowns.use('player2', 'ability3', 50);
@@ -1319,7 +1322,7 @@ function player2_ability_4() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Lord of the Mysteries') {
+    if (spriteName === 'Cube') {
         if (abilityCooldowns.canUse('player2', 'ability4')) {
             lorMystery_player2_ability_4();
             abilityCooldowns.use('player2', 'ability4', 40);
