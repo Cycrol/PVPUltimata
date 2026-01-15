@@ -98,7 +98,7 @@ const spriteSelection = {
             if (p2Selected) statusStr += '✓ Player 2 Ready';
             else statusStr += '✗ Player 2 Waiting';
         
-            title.textContent = 'Both Players - Choose Your Sprites';
+            title.textContent = 'Get ready';
             statusText.textContent = statusStr;
     },
 
@@ -910,7 +910,7 @@ function lorMystery_player1_PA() {
         vy: vy,
         width: 15,
         height: 10,
-        damage: 5,
+        damage: 2,
         destroyed: false,
         owner: 'player1',
         hasHitPlayer2: false,
@@ -1010,7 +1010,7 @@ function lorMystery_player1_ability_1() {
             vy: Math.sin(angle) * 6,
             width: 12,
             height: 12,
-            damage: 10,
+            damage: 12,
             destroyed: false,
             owner: 'player1',
             hasHitPlayer2: false,
@@ -1103,7 +1103,7 @@ function lorMystery_player1_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 10,
+            damage: 13,
             destroyed: false,
             owner: 'player1',
             lifetime: 0.3,
@@ -1210,7 +1210,7 @@ function lorMystery_player1_ability_4() {
             vy: Math.sin(angle) * 7,
             width: 20,
             height: 18,
-            damage: 50,
+            damage: 60,
             destroyed: false,
             owner: 'player1',
             isShield: true,
@@ -1361,7 +1361,7 @@ function lorMystery_player2_PA() {
         vy: vy,
         width: 15,
         height: 10,
-        damage: 5,
+        damage: 2,
         destroyed: false,
         owner: 'player2',
         hasHitPlayer1: false,
@@ -1461,7 +1461,7 @@ function lorMystery_player2_ability_1() {
             vy: Math.sin(angle) * 6,
             width: 12,
             height: 12,
-            damage: 10,
+            damage: 12,
             destroyed: false,
             owner: 'player2',
             hasHitPlayer1: false,
@@ -1555,7 +1555,7 @@ function lorMystery_player2_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 10,
+            damage: 13,
             destroyed: false,
             owner: 'player2',
             lifetime: 0.3,
@@ -1662,7 +1662,7 @@ function lorMystery_player2_ability_4() {
             vy: Math.sin(angle) * 7,
             width: 20,
             height: 18,
-            damage: 50,
+            damage: 60,
             destroyed: false,
             owner: 'player2',
             isShield: true,
@@ -1740,8 +1740,8 @@ function updateHUD() {
 
 // Create ability icons and timers UI
 function createAbilityUI(player) {
-    const abilities = ['PA', 'ability1', 'ability2', 'ability3', 'ability4'];
-    const abilityLabels = ['PA', 'Ability 1', 'Ability 2', 'Ability 3', 'Ability 4'];
+    const abilities = ['ability1', 'ability2', 'ability3', 'ability4'];
+    const abilityLabels = ['Ability 1', 'Ability 2', 'Ability 3', 'Ability 4'];
     
     const container = document.getElementById('gameContainer');
     const hudId = player === 'player1' ? 'leftHud' : 'rightHud';
@@ -1760,6 +1760,10 @@ function createAbilityUI(player) {
         const ability = abilities[i];
         const label = abilityLabels[i];
         
+        // Get the keybind for this ability
+        const keyBind = keyBindsManager.getKeyBind(player, ability);
+        const displayKey = formatKeyForDisplay(keyBind);
+        
         const abilityIcon = document.createElement('div');
         abilityIcon.id = player + '_' + ability + '_icon';
         abilityIcon.style.position = 'relative';
@@ -1774,7 +1778,22 @@ function createAbilityUI(player) {
         abilityIcon.style.cursor = 'pointer';
         abilityIcon.title = label;
         
-        // Timer text
+        // Keybind display text
+        const keyText = document.createElement('div');
+        keyText.id = player + '_' + ability + '_keytext';
+        keyText.style.position = 'absolute';
+        keyText.style.fontSize = '12px';
+        keyText.style.color = '#fff';
+        keyText.style.fontWeight = 'bold';
+        keyText.style.width = '100%';
+        keyText.style.height = '100%';
+        keyText.style.display = 'flex';
+        keyText.style.alignItems = 'center';
+        keyText.style.justifyContent = 'center';
+        keyText.style.textShadow = '1px 1px 2px #000';
+        keyText.textContent = displayKey;
+        
+        // Timer text (for cooldown)
         const timerText = document.createElement('div');
         timerText.id = player + '_' + ability + '_timer';
         timerText.style.position = 'absolute';
@@ -1783,12 +1802,13 @@ function createAbilityUI(player) {
         timerText.style.fontWeight = 'bold';
         timerText.style.width = '100%';
         timerText.style.height = '100%';
-        timerText.style.display = 'flex';
+        timerText.style.display = 'none';
         timerText.style.alignItems = 'center';
         timerText.style.justifyContent = 'center';
         timerText.style.textShadow = '1px 1px 2px #000';
-        timerText.textContent = 'R';
+        timerText.textContent = '0';
         
+        abilityIcon.appendChild(keyText);
         abilityIcon.appendChild(timerText);
         abilityContainer.appendChild(abilityIcon);
     }
@@ -1796,32 +1816,46 @@ function createAbilityUI(player) {
     hud.appendChild(abilityContainer);
 }
 
+// Helper function to format key for display
+function formatKeyForDisplay(keyStr) {
+    keyStr = keyStr.toUpperCase();
+    keyStr = keyStr.replace('ARROWUP', 'UP').replace('ARROWDOWN', 'DOWN').replace('ARROWLEFT', 'LEFT').replace('ARROWRIGHT', 'RIGHT');
+    // Return just the last character or number if it's a longer string
+    return keyStr.slice(-1);
+}
+
 // Update ability UI with cooldown timers
 function updateAbilityUI(player) {
-    const abilities = ['PA', 'ability1', 'ability2', 'ability3', 'ability4'];
+    const abilities = ['ability1', 'ability2', 'ability3', 'ability4'];
     
     for (let ability of abilities) {
         const iconId = player + '_' + ability + '_icon';
         const timerId = player + '_' + ability + '_timer';
+        const keyTextId = player + '_' + ability + '_keytext';
         const icon = document.getElementById(iconId);
         const timer = document.getElementById(timerId);
+        const keyText = document.getElementById(keyTextId);
         
-        if (!icon || !timer) continue;
+        if (!icon || !timer || !keyText) continue;
         
         const cooldownRemaining = abilityCooldowns[player][ability];
         
         if (cooldownRemaining <= 0) {
-            // Ready
+            // Ready - show keybind
             icon.style.backgroundColor = '#9b59b6';
             icon.style.opacity = '1';
-            timer.textContent = 'R';
+            keyText.style.display = 'flex';
+            timer.style.display = 'none';
         } else {
-            // On cooldown
+            // On cooldown - show timer
             icon.style.backgroundColor = '#555';
             icon.style.opacity = '0.6';
+            keyText.style.display = 'none';
+            timer.style.display = 'flex';
             timer.textContent = cooldownRemaining.toFixed(1);
         }
     }
+}
 }
 
 // Sprite name getter helper
