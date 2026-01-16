@@ -16,4 +16,4 @@ Skill 1: Shoots 3 bullets, does 10 damage each, and heals 3% health from player.
 Skill 2: Shoots 3 lines, deals 10 damage and paralyses opponent for 8 sec.
 Skill 3: Decreases 30% health from opponent. 
 Skill 4: Shoots 3 triangles, deals 50 damage each.
-
+![Image](images/image.webp)
