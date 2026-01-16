@@ -71,7 +71,9 @@ const spriteSelection = {
     
     sprites: {
         choices: [
-            { name: 'Cube', color: '#9b59b6' }
+            { name: 'Lord of the Mysteries', color: '#9b59b6' },
+            { name: 'Minecraft', color: '#2ecc71' },
+            { name: 'Ninjago', color: '#111111' }
         ]
     },
 
@@ -501,12 +503,14 @@ const powerUpSystem = {
         player1: {
             strengthEnd: 0,
             weaknessEnd: 0,
-            speedEnd: 0
+            speedEnd: 0,
+            resistanceEnd: 0
         },
         player2: {
             strengthEnd: 0,
             weaknessEnd: 0,
-            speedEnd: 0
+            speedEnd: 0,
+            resistanceEnd: 0
         }
     },
     
@@ -545,6 +549,9 @@ const powerUpSystem = {
     spawn() {
         const container = document.getElementById('gameContainer');
         const types = ['strength', 'weakness', 'speed', 'healing'];
+        // include resistance collectible
+        // resistance reduces incoming damage by ~50% (see apply on hit)
+        types.push('resistance');
         const type = types[Math.floor(Math.random() * types.length)];
         
         let x = Math.random() * (container.clientWidth - 40);
@@ -579,6 +586,10 @@ const powerUpSystem = {
             case 'healing':
                 color = '#ffaa00';
                 display = 'HEL';
+                break;
+            case 'resistance':
+                color = '#8888ff';
+                display = 'RES';
                 break;
         }
         
@@ -718,6 +729,9 @@ const powerUpSystem = {
                 }
                 updateHUD();
                 break;
+            case 'resistance':
+                buffs.resistanceEnd = now + (buffDuration * 1000);
+                break;
         }
     },
     
@@ -732,9 +746,14 @@ const powerUpSystem = {
     hasSpeed(player) {
         return Date.now() < this.buffs[player].speedEnd;
     },
+
+    hasResistance(player) {
+        return Date.now() < this.buffs[player].resistanceEnd;
+    },
     
     getDamageMult(player) {
         let mult = 1.0;
+        // Keep legacy multiplier but we will only use strength/weakness for PA now
         if (this.hasStrength(player)) mult *= 1.2;
         if (this.hasWeakness(player)) mult *= 0.8;
         return mult;
@@ -815,7 +834,7 @@ function player1_PA() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player1', 'PA')) {
             lorMystery_player1_PA();
             abilityCooldowns.use('player1', 'PA', 0.1);
@@ -829,7 +848,7 @@ function player1_ability_1() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player1', 'ability1')) {
             lorMystery_player1_ability_1();
             abilityCooldowns.use('player1', 'ability1', 5);
@@ -843,7 +862,7 @@ function player1_ability_2() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player1', 'ability2')) {
             lorMystery_player1_ability_2();
             abilityCooldowns.use('player1', 'ability2', 25);
@@ -857,7 +876,7 @@ function player1_ability_3() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player1', 'ability3')) {
             lorMystery_player1_ability_3();
             abilityCooldowns.use('player1', 'ability3', 50);
@@ -871,7 +890,7 @@ function player1_ability_4() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player1Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player1', 'ability4')) {
             lorMystery_player1_ability_4();
             abilityCooldowns.use('player1', 'ability4', 40);
@@ -911,6 +930,7 @@ function lorMystery_player1_PA() {
         width: 15,
         height: 10,
         damage: 2,
+        attackType: 'PA',
         destroyed: false,
         owner: 'player1',
         hasHitPlayer2: false,
@@ -951,9 +971,26 @@ function lorMystery_player1_PA() {
                 const player2CenterY = player2.y + player2.HEIGHT / 2;
                 const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                 if (dist < 40) {
-                    // Apply damage multiplier from buffs
-                    const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
-                    const finalDamage = Math.round(this.damage * damageMultiplier);
+                    // Determine final damage. Strength/Weakness only affect PA now.
+                    let finalDamage = this.damage;
+                    if (this.attackType === 'PA') {
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasStrength && powerUpSystem.hasStrength('player1')) {
+                            finalDamage = 3;
+                        } else if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasWeakness && powerUpSystem.hasWeakness('player1')) {
+                            finalDamage = 1;
+                        } else {
+                            finalDamage = this.damage;
+                        }
+                    } else {
+                        finalDamage = this.damage;
+                    }
+
+                    // Apply resistance on the victim (player2) if present: ~50% less damage
+                    if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player2')) {
+                        if (finalDamage <= 1) finalDamage = 0;
+                        else finalDamage = Math.round(finalDamage * 0.5);
+                    }
+
                     window.player2HP = Math.max(0, window.player2HP - finalDamage);
                     
                     updateHUD();
@@ -1010,7 +1047,7 @@ function lorMystery_player1_ability_1() {
             vy: Math.sin(angle) * 6,
             width: 12,
             height: 12,
-            damage: 12,
+            damage: 10,
             destroyed: false,
             owner: 'player1',
             hasHitPlayer2: false,
@@ -1039,9 +1076,12 @@ function lorMystery_player1_ability_1() {
                     const player2CenterY = player2.y + player2.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                     if (dist < 40) {
-                        // Apply damage multiplier from buffs
-                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
-                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        // Strength/Weakness do not affect abilities; apply raw damage and then resistance on victim
+                        let finalDamage = this.damage;
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player2')) {
+                            if (finalDamage <= 1) finalDamage = 0;
+                            else finalDamage = Math.round(finalDamage * 0.5);
+                        }
                         window.player2HP = Math.max(0, window.player2HP - finalDamage);
                         updateHUD();
                         this.destroyed = true;
@@ -1103,7 +1143,7 @@ function lorMystery_player1_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 13,
+            damage: 10,
             destroyed: false,
             owner: 'player1',
             lifetime: 0.3,
@@ -1135,9 +1175,11 @@ function lorMystery_player1_ability_2() {
                     const player2CenterY = player2.y + player2.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                     if (dist < 50) {
-                        // Apply damage multiplier from buffs
-                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player1') : 1.0;
-                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        let finalDamage = this.damage;
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player2')) {
+                            if (finalDamage <= 1) finalDamage = 0;
+                            else finalDamage = Math.round(finalDamage * 0.5);
+                        }
                         window.player2HP = Math.max(0, window.player2HP - finalDamage);
                         updateHUD();
                         paralysisSystem.paralyze('player2', 10);
@@ -1210,7 +1252,7 @@ function lorMystery_player1_ability_4() {
             vy: Math.sin(angle) * 7,
             width: 20,
             height: 18,
-            damage: 60,
+            damage: 50,
             destroyed: false,
             owner: 'player1',
             isShield: true,
@@ -1240,7 +1282,12 @@ function lorMystery_player1_ability_4() {
                     const player2CenterY = player2.y + player2.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player2CenterX) ** 2 + (this.y - player2CenterY) ** 2);
                     if (dist < 40) {
-                        window.player2HP = Math.max(0, window.player2HP - 50);
+                        let finalDamage = this.damage;
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player2')) {
+                            if (finalDamage <= 1) finalDamage = 0;
+                            else finalDamage = Math.round(finalDamage * 0.5);
+                        }
+                        window.player2HP = Math.max(0, window.player2HP - finalDamage);
                         updateHUD();
                         this.destroyed = true;
                         this.element.remove();
@@ -1266,7 +1313,7 @@ function player2_PA() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player2', 'PA')) {
             lorMystery_player2_PA();
             abilityCooldowns.use('player2', 'PA', 0.1);
@@ -1280,7 +1327,7 @@ function player2_ability_1() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player2', 'ability1')) {
             lorMystery_player2_ability_1();
             abilityCooldowns.use('player2', 'ability1', 5);
@@ -1294,7 +1341,7 @@ function player2_ability_2() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player2', 'ability2')) {
             lorMystery_player2_ability_2();
             abilityCooldowns.use('player2', 'ability2', 25);
@@ -1308,7 +1355,7 @@ function player2_ability_3() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player2', 'ability3')) {
             lorMystery_player2_ability_3();
             abilityCooldowns.use('player2', 'ability3', 50);
@@ -1322,7 +1369,7 @@ function player2_ability_4() {
     if (!spriteSelection.gameStarted) return;
     const spriteName = spriteSelection.sprites.choices[spriteSelection.player2Selected].name;
     
-    if (spriteName === 'Cube') {
+    if (spriteName === 'Lord of the Mysteries') {
         if (abilityCooldowns.canUse('player2', 'ability4')) {
             lorMystery_player2_ability_4();
             abilityCooldowns.use('player2', 'ability4', 40);
@@ -1362,6 +1409,7 @@ function lorMystery_player2_PA() {
         width: 15,
         height: 10,
         damage: 2,
+        attackType: 'PA',
         destroyed: false,
         owner: 'player2',
         hasHitPlayer1: false,
@@ -1402,9 +1450,26 @@ function lorMystery_player2_PA() {
                 const player1CenterY = player1.y + player1.HEIGHT / 2;
                 const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
                 if (dist < 40) {
-                    // Apply damage multiplier from buffs
-                    const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
-                    const finalDamage = Math.round(this.damage * damageMultiplier);
+                    // Strength/Weakness only affect PA now; apply raw damage for abilities
+                    let finalDamage = this.damage;
+                    if (this.attackType === 'PA') {
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasStrength && powerUpSystem.hasStrength('player2')) {
+                            finalDamage = 3;
+                        } else if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasWeakness && powerUpSystem.hasWeakness('player2')) {
+                            finalDamage = 1;
+                        } else {
+                            finalDamage = this.damage;
+                        }
+                    } else {
+                        finalDamage = this.damage;
+                    }
+
+                    // Apply resistance on the victim (player1)
+                    if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player1')) {
+                        if (finalDamage <= 1) finalDamage = 0;
+                        else finalDamage = Math.round(finalDamage * 0.5);
+                    }
+
                     window.player1HP = Math.max(0, window.player1HP - finalDamage);
                     
                     updateHUD();
@@ -1461,7 +1526,7 @@ function lorMystery_player2_ability_1() {
             vy: Math.sin(angle) * 6,
             width: 12,
             height: 12,
-            damage: 12,
+            damage: 10,
             destroyed: false,
             owner: 'player2',
             hasHitPlayer1: false,
@@ -1490,9 +1555,11 @@ function lorMystery_player2_ability_1() {
                     const player1CenterY = player1.y + player1.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
                     if (dist < 40) {
-                        // Apply damage multiplier from buffs
-                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
-                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        let finalDamage = this.damage;
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player1')) {
+                            if (finalDamage <= 1) finalDamage = 0;
+                            else finalDamage = Math.round(finalDamage * 0.5);
+                        }
                         window.player1HP = Math.max(0, window.player1HP - finalDamage);
                         updateHUD();
                         this.destroyed = true;
@@ -1555,7 +1622,7 @@ function lorMystery_player2_ability_2() {
             vy: Math.sin(angle) * 8,
             width: 200,
             height: 4,
-            damage: 13,
+            damage: 10,
             destroyed: false,
             owner: 'player2',
             lifetime: 0.3,
@@ -1587,9 +1654,11 @@ function lorMystery_player2_ability_2() {
                     const player1CenterY = player1.y + player1.HEIGHT / 2;
                     const dist = Math.sqrt((this.x - player1CenterX) ** 2 + (this.y - player1CenterY) ** 2);
                     if (dist < 50) {
-                        // Apply damage multiplier from buffs
-                        const damageMultiplier = (typeof powerUpSystem !== 'undefined') ? powerUpSystem.getDamageMult('player2') : 1.0;
-                        const finalDamage = Math.round(this.damage * damageMultiplier);
+                        let finalDamage = this.damage;
+                        if (typeof powerUpSystem !== 'undefined' && powerUpSystem.hasResistance && powerUpSystem.hasResistance('player1')) {
+                            if (finalDamage <= 1) finalDamage = 0;
+                            else finalDamage = Math.round(finalDamage * 0.5);
+                        }
                         window.player1HP = Math.max(0, window.player1HP - finalDamage);
                         updateHUD();
                         paralysisSystem.paralyze('player1', 10);
@@ -1662,7 +1731,7 @@ function lorMystery_player2_ability_4() {
             vy: Math.sin(angle) * 7,
             width: 20,
             height: 18,
-            damage: 60,
+            damage: 50,
             destroyed: false,
             owner: 'player2',
             isShield: true,
@@ -1738,7 +1807,7 @@ function updateHUD() {
     updateAbilityUI('player2');
 }
 
-// Create ability icons and timers UI
+// Create ability icons and timers UI (PA is not shown here)
 function createAbilityUI(player) {
     const abilities = ['ability1', 'ability2', 'ability3', 'ability4'];
     const abilityLabels = ['Ability 1', 'Ability 2', 'Ability 3', 'Ability 4'];
@@ -1760,27 +1829,23 @@ function createAbilityUI(player) {
         const ability = abilities[i];
         const label = abilityLabels[i];
         
-        // Get the keybind for this ability
-        const keyBind = keyBindsManager.getKeyBind(player, ability);
-        const displayKey = formatKeyForDisplay(keyBind);
-        
         const abilityIcon = document.createElement('div');
         abilityIcon.id = player + '_' + ability + '_icon';
         abilityIcon.style.position = 'relative';
         abilityIcon.style.width = '30px';
         abilityIcon.style.height = '30px';
-        abilityIcon.style.backgroundColor = '#9b59b6';
+        abilityIcon.style.backgroundColor = '#ff4444';
         abilityIcon.style.borderRadius = '4px';
         abilityIcon.style.display = 'flex';
         abilityIcon.style.alignItems = 'center';
         abilityIcon.style.justifyContent = 'center';
-        abilityIcon.style.border = '2px solid #fff';
+        abilityIcon.style.border = '2px solid #ffd700';
         abilityIcon.style.cursor = 'pointer';
         abilityIcon.title = label;
-        
-        // Keybind display text
+
+        // Key text (shows when ready)
         const keyText = document.createElement('div');
-        keyText.id = player + '_' + ability + '_keytext';
+        keyText.id = player + '_' + ability + '_key';
         keyText.style.position = 'absolute';
         keyText.style.fontSize = '12px';
         keyText.style.color = '#fff';
@@ -1791,9 +1856,9 @@ function createAbilityUI(player) {
         keyText.style.alignItems = 'center';
         keyText.style.justifyContent = 'center';
         keyText.style.textShadow = '1px 1px 2px #000';
-        keyText.textContent = displayKey;
-        
-        // Timer text (for cooldown)
+        keyText.textContent = '';
+
+        // Timer text (shows when on cooldown)
         const timerText = document.createElement('div');
         timerText.id = player + '_' + ability + '_timer';
         timerText.style.position = 'absolute';
@@ -1802,26 +1867,18 @@ function createAbilityUI(player) {
         timerText.style.fontWeight = 'bold';
         timerText.style.width = '100%';
         timerText.style.height = '100%';
-        timerText.style.display = 'none';
+        timerText.style.display = 'flex';
         timerText.style.alignItems = 'center';
         timerText.style.justifyContent = 'center';
         timerText.style.textShadow = '1px 1px 2px #000';
-        timerText.textContent = '0';
-        
+        timerText.textContent = '';
+
         abilityIcon.appendChild(keyText);
         abilityIcon.appendChild(timerText);
         abilityContainer.appendChild(abilityIcon);
     }
     
     hud.appendChild(abilityContainer);
-}
-
-// Helper function to format key for display
-function formatKeyForDisplay(keyStr) {
-    keyStr = keyStr.toUpperCase();
-    keyStr = keyStr.replace('ARROWUP', 'UP').replace('ARROWDOWN', 'DOWN').replace('ARROWLEFT', 'LEFT').replace('ARROWRIGHT', 'RIGHT');
-    // Return just the last character or number if it's a longer string
-    return keyStr.slice(-1);
 }
 
 // Update ability UI with cooldown timers
@@ -1831,31 +1888,37 @@ function updateAbilityUI(player) {
     for (let ability of abilities) {
         const iconId = player + '_' + ability + '_icon';
         const timerId = player + '_' + ability + '_timer';
-        const keyTextId = player + '_' + ability + '_keytext';
+        const keyId = player + '_' + ability + '_key';
         const icon = document.getElementById(iconId);
         const timer = document.getElementById(timerId);
-        const keyText = document.getElementById(keyTextId);
+        const keyText = document.getElementById(keyId);
         
-        if (!icon || !timer || !keyText) continue;
+        if (!icon || !timer) continue;
         
         const cooldownRemaining = abilityCooldowns[player][ability];
         
         if (cooldownRemaining <= 0) {
-            // Ready - show keybind
-            icon.style.backgroundColor = '#9b59b6';
+            // Ready
+            icon.style.backgroundColor = '#ff4444';
+            icon.style.border = '2px solid #ffd700';
             icon.style.opacity = '1';
-            keyText.style.display = 'flex';
-            timer.style.display = 'none';
+            if (keyText) {
+                // show key and hide timer
+                const rawKey = keyBindsManager.getKeyBind(player, ability);
+                const fmt = (rawKey || '').toUpperCase().replace('ARROWUP','UP').replace('ARROWDOWN','DOWN').replace('ARROWLEFT','LEFT').replace('ARROWRIGHT','RIGHT');
+                keyText.textContent = fmt;
+                keyText.style.display = 'flex';
+            }
+            timer.textContent = '';
         } else {
-            // On cooldown - show timer
+            // On cooldown
             icon.style.backgroundColor = '#555';
+            icon.style.border = '2px solid #333';
             icon.style.opacity = '0.6';
-            keyText.style.display = 'none';
-            timer.style.display = 'flex';
+            if (keyText) keyText.style.display = 'none';
             timer.textContent = cooldownRemaining.toFixed(1);
         }
     }
-}
 }
 
 // Sprite name getter helper

@@ -12,18 +12,18 @@
         <div class="player" id="player1"></div>
         <div class="player" id="player2"></div>
         <div class="info" id="info" style="display: none;">
-            <div><strong>Player 1:</strong> C F B to move, V for normal attack, ability keys 1234</div>
-            <div><strong>Player 2:</strong> Arrow Keys to move, Down for normal attack, ability keys 7890</div>
+            <div><strong>Player 1:</strong> Hello!</div>
+            <div><strong>Player 2:</strong> CUBE WARS</div>
         </div>
     </div>
 
     <div id="spriteSelectionModal">
         <div class="sprite-selection">
-            <h2 id="selectionTitle">Player 1 - Choose Your Sprite</h2>
+            <h2 id="selectionTitle">Get ready</h2>
             <div class="status-text" id="statusText"></div>
             <div class="sprite-options" id="spriteOptions"></div>
             <button id="keyBindsMenuBtn" style="margin-top: 20px; padding: 10px 25px; background: #FFD700; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">
-                ⚙️ Key Binds Settings
+                Key Binds Settings
             </button>
         </div>
     </div>
@@ -81,5 +81,184 @@
     <script src="Javascript/player_1.js"></script>
     <script src="Javascript/player_2.js"></script>
     <script src="Javascript/skins.js"></script>
+    
+    <script>
+        // Initialize sprite selection UI after all scripts are loaded
+        function initSpriteUI() {
+            console.log('Initializing sprite UI...');
+            const spriteOptions = document.getElementById('spriteOptions');
+            if (!spriteOptions) {
+                console.error('spriteOptions element not found');
+                return;
+            }
+            
+            spriteOptions.innerHTML = ''; // Clear
+            spriteOptions.style.display = 'flex';
+            spriteOptions.style.gap = '60px';
+            spriteOptions.style.justifyContent = 'center';
+            spriteOptions.style.flexWrap = 'wrap';
+            spriteOptions.style.alignItems = 'flex-start';
+            
+            // Player 1
+            const p1Sec = document.createElement('div');
+            p1Sec.style.textAlign = 'center';
+            const p1Lbl = document.createElement('h3');
+            p1Lbl.textContent = 'Player 1 (WASD)';
+            p1Lbl.style.color = '#FFD700';
+            p1Lbl.style.margin = '0 0 15px 0';
+            p1Sec.appendChild(p1Lbl);
+            
+            const p1Opts = document.createElement('div');
+            p1Opts.style.display = 'flex';
+            p1Opts.style.flexDirection = 'column';
+            p1Opts.style.gap = '15px';
+            
+            // Player 2
+            const p2Sec = document.createElement('div');
+            p2Sec.style.textAlign = 'center';
+            const p2Lbl = document.createElement('h3');
+            p2Lbl.textContent = 'Player 2 (IJKL)';
+            p2Lbl.style.color = '#FFD700';
+            p2Lbl.style.margin = '0 0 15px 0';
+            p2Sec.appendChild(p2Lbl);
+            
+            const p2Opts = document.createElement('div');
+            p2Opts.style.display = 'flex';
+            p2Opts.style.flexDirection = 'column';
+            p2Opts.style.gap = '15px';
+            
+            // Get choices
+            const choices = spriteSelection && spriteSelection.sprites && spriteSelection.sprites.choices ? spriteSelection.sprites.choices : [];
+            console.log('Available choices:', choices.length, choices);
+            
+            choices.forEach((choice, idx) => {
+                // Player 1 option
+                const opt1 = document.createElement('div');
+                opt1.style.display = 'flex';
+                opt1.style.alignItems = 'center';
+                opt1.style.gap = '10px';
+                opt1.style.cursor = 'pointer';
+                opt1.style.padding = '10px';
+                opt1.style.borderRadius = '5px';
+                opt1.style.border = '2px solid transparent';
+                
+                const color1 = document.createElement('div');
+                color1.style.backgroundColor = choice.color;
+                color1.style.width = '40px';
+                color1.style.height = '40px';
+                color1.style.borderRadius = '6px';
+                
+                const label1 = document.createElement('span');
+                label1.textContent = 'Cube 1';
+                label1.style.color = '#fff';
+                label1.style.fontWeight = 'bold';
+                
+                opt1.appendChild(color1);
+                opt1.appendChild(label1);
+                opt1.onclick = () => {
+                    spriteSelection.selectSprite(1, idx);
+                    opt1.style.outline = '3px solid #FFD700';
+                };
+                p1Opts.appendChild(opt1);
+                
+                // Player 2 option
+                const opt2 = document.createElement('div');
+                opt2.style.display = 'flex';
+                opt2.style.alignItems = 'center';
+                opt2.style.gap = '10px';
+                opt2.style.cursor = 'pointer';
+                opt2.style.padding = '10px';
+                opt2.style.borderRadius = '5px';
+                opt2.style.border = '2px solid transparent';
+                
+                const color2 = document.createElement('div');
+                color2.style.backgroundColor = choice.color;
+                color2.style.width = '40px';
+                color2.style.height = '40px';
+                color2.style.borderRadius = '6px';
+                
+                const label2 = document.createElement('span');
+                label2.textContent = 'Cube 2';
+                label2.style.color = '#fff';
+                label2.style.fontWeight = 'bold';
+                
+                opt2.appendChild(color2);
+                opt2.appendChild(label2);
+                opt2.onclick = () => {
+                    spriteSelection.selectSprite(2, idx);
+                    opt2.style.outline = '3px solid #FFD700';
+                };
+                p2Opts.appendChild(opt2);
+            });
+            
+            p1Sec.appendChild(p1Opts);
+            p2Sec.appendChild(p2Opts);
+            spriteOptions.appendChild(p1Sec);
+            spriteOptions.appendChild(p2Sec);
+
+            // Add Ready buttons so players can confirm even when only one sprite exists
+            try {
+                const selectionBox = document.querySelector('.sprite-selection');
+                if (selectionBox) {
+                    const readyContainer = document.createElement('div');
+                    readyContainer.style.display = 'flex';
+                    readyContainer.style.justifyContent = 'center';
+                    readyContainer.style.gap = '20px';
+                    readyContainer.style.marginTop = '12px';
+
+                    const p1Ready = document.createElement('button');
+                    p1Ready.id = 'p1ReadyBtn';
+                    p1Ready.textContent = 'Player 1 Ready';
+                    p1Ready.style.padding = '8px 14px';
+                    p1Ready.style.background = '#4CAF50';
+                    p1Ready.style.color = '#fff';
+                    p1Ready.style.border = 'none';
+                    p1Ready.style.borderRadius = '6px';
+                    p1Ready.style.cursor = 'pointer';
+                    p1Ready.onclick = () => {
+                        if (typeof spriteSelection !== 'undefined') {
+                            if (spriteSelection.player1Selected === null) spriteSelection.selectSprite(1, 0);
+                            p1Ready.style.opacity = '0.7';
+                        }
+                    };
+
+                    const p2Ready = document.createElement('button');
+                    p2Ready.id = 'p2ReadyBtn';
+                    p2Ready.textContent = 'Player 2 Ready';
+                    p2Ready.style.padding = '8px 14px';
+                    p2Ready.style.background = '#2196F3';
+                    p2Ready.style.color = '#fff';
+                    p2Ready.style.border = 'none';
+                    p2Ready.style.borderRadius = '6px';
+                    p2Ready.style.cursor = 'pointer';
+                    p2Ready.onclick = () => {
+                        if (typeof spriteSelection !== 'undefined') {
+                            if (spriteSelection.player2Selected === null) spriteSelection.selectSprite(2, 0);
+                            p2Ready.style.opacity = '0.7';
+                        }
+                    };
+
+                    readyContainer.appendChild(p1Ready);
+                    readyContainer.appendChild(p2Ready);
+                    selectionBox.appendChild(readyContainer);
+                }
+            } catch (e) { console.error('Could not add ready buttons', e); }
+
+            // Attach keybinds button
+            const keyBindsBtn = document.getElementById('keyBindsMenuBtn');
+            if (keyBindsBtn) {
+                keyBindsBtn.addEventListener('click', () => {
+                    if (typeof keyBindsUI !== 'undefined' && keyBindsUI.openModal) {
+                        keyBindsUI.openModal();
+                    }
+                });
+            }
+
+            console.log('Sprite UI initialized');
+        }
+
+        // Run immediately
+        initSpriteUI();
+    </script>
 </body>
 </html>
