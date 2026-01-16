@@ -250,100 +250,28 @@ const spriteSelection = {
     }
 };
 
-// Initialize sprite selection UI
+// Initialize sprite selection UI (no DOM construction here to avoid duplicate UI)
 window.addEventListener('DOMContentLoaded', () => {
     const spriteOptions = document.getElementById('spriteOptions');
-    spriteOptions.style.display = 'flex';
-    spriteOptions.style.gap = '60px';
-    spriteOptions.style.justifyContent = 'center';
-    
-    // Player 1 section
-    const player1Section = document.createElement('div');
-    player1Section.style.textAlign = 'center';
-    
-    const p1Label = document.createElement('h3');
-    p1Label.textContent = 'Player 1 (WASD)';
-    p1Label.style.color = '#FFD700';
-    p1Label.style.marginBottom = '15px';
-    p1Label.style.fontSize = '16px';
-    player1Section.appendChild(p1Label);
-    
-    const p1Options = document.createElement('div');
-    p1Options.style.display = 'flex';
-    p1Options.style.flexDirection = 'column';
-    p1Options.style.gap = '15px';
-    
-    // Build unified choices for both players
-    const player2Section = document.createElement('div');
-    player2Section.style.textAlign = 'center';
-    const p2Label = document.createElement('h3');
-    p2Label.textContent = 'Player 2 (IJKL)';
-    p2Label.style.color = '#FFD700';
-    p2Label.style.marginBottom = '15px';
-    p2Label.style.fontSize = '16px';
-    player2Section.appendChild(p2Label);
+    if (spriteOptions) {
+        // ensure it's empty and set the basic layout; actual UI is built by index.html's initSpriteUI()
+        spriteOptions.innerHTML = '';
+        spriteOptions.style.display = 'flex';
+        spriteOptions.style.gap = '60px';
+        spriteOptions.style.justifyContent = 'center';
+    }
 
-    const p2Options = document.createElement('div');
-    p2Options.style.display = 'flex';
-    p2Options.style.flexDirection = 'column';
-    p2Options.style.gap = '15px';
+    // Update selection status
+    try { spriteSelection.updateUI(); } catch (e) { }
 
-    const choices = spriteSelection.sprites.choices || [];
-    choices.forEach((choice, idx) => {
-        // option for player1
-        const opt1 = document.createElement('div');
-        opt1.className = 'sprite-option';
-        opt1.style.display = 'flex';
-        opt1.style.alignItems = 'center';
-        opt1.style.gap = '10px';
-        opt1.style.cursor = 'pointer';
-        const prev1 = document.createElement('div');
-        prev1.className = 'sprite-preview';
-        prev1.style.backgroundColor = choice.color;
-        prev1.style.width = '40px'; prev1.style.height = '40px'; prev1.style.borderRadius = '6px';
-        const lbl1 = document.createElement('div'); lbl1.className = 'sprite-label'; lbl1.textContent = 'Cube 1';
-        opt1.appendChild(prev1); opt1.appendChild(lbl1);
-        opt1.onclick = () => { spriteSelection.selectSprite(1, idx); opt1.style.outline = '3px solid #FFD700'; };
-        p1Options.appendChild(opt1);
-
-        // option for player2 (clone)
-        const opt2 = document.createElement('div');
-        opt2.className = 'sprite-option';
-        opt2.style.display = 'flex';
-        opt2.style.alignItems = 'center';
-        opt2.style.gap = '10px';
-        opt2.style.cursor = 'pointer';
-        const prev2 = document.createElement('div');
-        prev2.className = 'sprite-preview';
-        prev2.style.backgroundColor = choice.color;
-        prev2.style.width = '40px'; prev2.style.height = '40px'; prev2.style.borderRadius = '6px';
-        const lbl2 = document.createElement('div'); lbl2.className = 'sprite-label'; lbl2.textContent = 'Cube 2';
-        opt2.appendChild(prev2); opt2.appendChild(lbl2);
-        opt2.onclick = () => { spriteSelection.selectSprite(2, idx); opt2.style.outline = '3px solid #FFD700'; };
-        p2Options.appendChild(opt2);
-    });
-
-    player1Section.appendChild(p1Options);
-    player2Section.appendChild(p2Options);
-    spriteOptions.appendChild(player1Section);
-    spriteOptions.appendChild(player2Section);
-    
-    spriteSelection.updateUI();
-
-    // Add event listener to key binds settings button
+    // Wire key binds settings button if present
     const keyBindsBtn = document.getElementById('keyBindsMenuBtn');
     if (keyBindsBtn) {
         keyBindsBtn.addEventListener('click', () => {
-            keyBindsUI.openModal();
+            if (typeof keyBindsUI !== 'undefined' && keyBindsUI.openModal) keyBindsUI.openModal();
         });
-        keyBindsBtn.addEventListener('mouseover', () => {
-            keyBindsBtn.style.background = '#FFC700';
-            keyBindsBtn.style.transform = 'scale(1.05)';
-        });
-        keyBindsBtn.addEventListener('mouseout', () => {
-            keyBindsBtn.style.background = '#FFD700';
-            keyBindsBtn.style.transform = 'scale(1)';
-        });
+        keyBindsBtn.addEventListener('mouseover', () => { keyBindsBtn.style.background = '#FFC700'; keyBindsBtn.style.transform = 'scale(1.05)'; });
+        keyBindsBtn.addEventListener('mouseout', () => { keyBindsBtn.style.background = '#FFD700'; keyBindsBtn.style.transform = 'scale(1)'; });
     }
 });
 

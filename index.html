@@ -128,69 +128,71 @@
             p2Opts.style.flexDirection = 'column';
             p2Opts.style.gap = '15px';
             
-            // Get choices
+            // Simplified: only one cube choice per player (two columns total)
+            // Try to pick a color from the first choice if available, otherwise fallback colors
             const choices = spriteSelection && spriteSelection.sprites && spriteSelection.sprites.choices ? spriteSelection.sprites.choices : [];
-            console.log('Available choices:', choices.length, choices);
-            
-            choices.forEach((choice, idx) => {
-                // Player 1 option
-                const opt1 = document.createElement('div');
-                opt1.style.display = 'flex';
-                opt1.style.alignItems = 'center';
-                opt1.style.gap = '10px';
-                opt1.style.cursor = 'pointer';
-                opt1.style.padding = '10px';
-                opt1.style.borderRadius = '5px';
-                opt1.style.border = '2px solid transparent';
-                
-                const color1 = document.createElement('div');
-                color1.style.backgroundColor = choice.color;
-                color1.style.width = '40px';
-                color1.style.height = '40px';
-                color1.style.borderRadius = '6px';
-                
-                const label1 = document.createElement('span');
-                label1.textContent = 'Cube 1';
-                label1.style.color = '#fff';
-                label1.style.fontWeight = 'bold';
-                
-                opt1.appendChild(color1);
-                opt1.appendChild(label1);
-                opt1.onclick = () => {
-                    spriteSelection.selectSprite(1, idx);
-                    opt1.style.outline = '3px solid #FFD700';
-                };
-                p1Opts.appendChild(opt1);
-                
-                // Player 2 option
-                const opt2 = document.createElement('div');
-                opt2.style.display = 'flex';
-                opt2.style.alignItems = 'center';
-                opt2.style.gap = '10px';
-                opt2.style.cursor = 'pointer';
-                opt2.style.padding = '10px';
-                opt2.style.borderRadius = '5px';
-                opt2.style.border = '2px solid transparent';
-                
-                const color2 = document.createElement('div');
-                color2.style.backgroundColor = choice.color;
-                color2.style.width = '40px';
-                color2.style.height = '40px';
-                color2.style.borderRadius = '6px';
-                
-                const label2 = document.createElement('span');
-                label2.textContent = 'Cube 2';
-                label2.style.color = '#fff';
-                label2.style.fontWeight = 'bold';
-                
-                opt2.appendChild(color2);
-                opt2.appendChild(label2);
-                opt2.onclick = () => {
-                    spriteSelection.selectSprite(2, idx);
-                    opt2.style.outline = '3px solid #FFD700';
-                };
-                p2Opts.appendChild(opt2);
-            });
+            const baseColor = (choices[0] && choices[0].color) ? choices[0].color : '#888888';
+            const baseColorP2 = (choices[1] && choices[1].color) ? choices[1].color : '#555555';
+
+            // Create single option for Player 1
+            const opt1 = document.createElement('div');
+            opt1.style.display = 'flex';
+            opt1.style.flexDirection = 'column';
+            opt1.style.alignItems = 'center';
+            opt1.style.cursor = 'pointer';
+            opt1.style.padding = '12px';
+            opt1.style.borderRadius = '8px';
+            opt1.style.border = '2px solid transparent';
+
+            const color1 = document.createElement('div');
+            color1.style.backgroundColor = baseColor;
+            color1.style.width = '80px';
+            color1.style.height = '80px';
+            color1.style.borderRadius = '8px';
+            color1.style.marginBottom = '10px';
+
+            const label1 = document.createElement('span');
+            label1.textContent = 'Cube';
+            label1.style.color = '#fff';
+            label1.style.fontWeight = 'bold';
+
+            opt1.appendChild(color1);
+            opt1.appendChild(label1);
+            opt1.onclick = () => {
+                if (typeof spriteSelection !== 'undefined') spriteSelection.selectSprite(1, 0);
+                opt1.style.outline = '4px solid #FFD700';
+            };
+            p1Opts.appendChild(opt1);
+
+            // Create single option for Player 2
+            const opt2 = document.createElement('div');
+            opt2.style.display = 'flex';
+            opt2.style.flexDirection = 'column';
+            opt2.style.alignItems = 'center';
+            opt2.style.cursor = 'pointer';
+            opt2.style.padding = '12px';
+            opt2.style.borderRadius = '8px';
+            opt2.style.border = '2px solid transparent';
+
+            const color2 = document.createElement('div');
+            color2.style.backgroundColor = baseColorP2;
+            color2.style.width = '80px';
+            color2.style.height = '80px';
+            color2.style.borderRadius = '8px';
+            color2.style.marginBottom = '10px';
+
+            const label2 = document.createElement('span');
+            label2.textContent = 'Cube';
+            label2.style.color = '#fff';
+            label2.style.fontWeight = 'bold';
+
+            opt2.appendChild(color2);
+            opt2.appendChild(label2);
+            opt2.onclick = () => {
+                if (typeof spriteSelection !== 'undefined') spriteSelection.selectSprite(2, 0);
+                opt2.style.outline = '4px solid #FFD700';
+            };
+            p2Opts.appendChild(opt2);
             
             p1Sec.appendChild(p1Opts);
             p2Sec.appendChild(p2Opts);
