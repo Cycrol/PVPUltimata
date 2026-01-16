@@ -254,8 +254,7 @@ const spriteSelection = {
 window.addEventListener('DOMContentLoaded', () => {
     const spriteOptions = document.getElementById('spriteOptions');
     if (spriteOptions) {
-        // ensure it's empty and set the basic layout; actual UI is built by index.html's initSpriteUI()
-        spriteOptions.innerHTML = '';
+        // Basic layout (actual UI is built by index.html's initSpriteUI())
         spriteOptions.style.display = 'flex';
         spriteOptions.style.gap = '60px';
         spriteOptions.style.justifyContent = 'center';
